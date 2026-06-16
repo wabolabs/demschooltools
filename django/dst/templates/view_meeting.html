@@ -1,0 +1,63 @@
+<h3>{{ org_config.str_jc_name_short }} minutes from {{ meeting.date }}</h3>
+<p>
+    <a href="/printMeeting/{{ meeting.id }}" class="btn btn-success no-print">Print minutes</a>
+    <a href="/viewMeetingResolutionPlans/{{ meeting.id }}" class="btn btn-success no-print" style="margin-left: 10px">Print {{ org_config.str_res_plans }}</a>
+    <a href="/editMeeting/{{ meeting.id }}" class="btn btn-warning no-print">Edit minutes</a>
+</p>
+
+<p>
+    <b>Chair:</b>
+    {% if chair %}{{ chair.person.display_name|default:chair.person.first_name }}{% else %}<em>None</em>{% endif %}
+    &middot; <b>Notetaker:</b>
+    {% if notetaker %}{{ notetaker.person.display_name|default:notetaker.person.first_name }}{% else %}<em>None</em>{% endif %}
+</p>
+
+<p>
+    <b>Committee:</b>
+    {% for pam in committee %}{{ pam.person.display_name|default:pam.person.first_name }}{% if not forloop.last %}, {% endif %}{% empty %}<em>None</em>{% endfor %}
+    &middot; <b>Subs:</b>
+    {% for pam in subs %}{{ pam.person.display_name|default:pam.person.first_name }}{% if not forloop.last %}, {% endif %}{% empty %}<em>None</em>{% endfor %}
+    &middot; <b>Runners:</b>
+    {% for pam in runners %}{{ pam.person.display_name|default:pam.person.first_name }}{% if not forloop.last %}, {% endif %}{% empty %}<em>None</em>{% endfor %}
+</p>
+
+<h4>Case notes</h4>
+<table class="table">
+{% for c in meeting.case_set.all %}
+    <tr>
+        <td><strong>#{{ c.case_number }}</strong></td>
+        <td>
+            {% if c.location %}<em>{{ c.location }}</em>{% endif %}
+            {% if c.date %} &middot; {{ c.date }}{% endif %}
+            {% if c.time %} &middot; {{ c.time }}{% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            <p>{{ c.findings|linebreaks }}</p>
+            {% for charge in c.charge_set.all %}
+                <div class="charge">
+                    <strong>{{ charge.person.display_name|default:charge.person.first_name|default:"Unknown" }}</strong>
+                    {% if charge.rule %} charged with <a href="/viewRuleHistory/{{ charge.rule.id }}">{{ charge.rule.number }} {{ charge.rule.title }}</a>{% endif %}
+                    &middot; Plea: {{ charge.plea }}
+                    &middot; {{ org_config.str_res_plan_cap }}: {{ charge.resolution_plan }}
+                    {% if charge.referred_to_sm %}
+                        <span class="label label-warning">Referred to School Meeting</span>
+                        {% if charge.sm_decision %}
+                            &middot; SM decision: {{ charge.sm_decision }}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="person-at-case">
+                {% for pac in c.personatcase_set.all %}
+                    <span class="label label-default">{{ pac.person.display_name|default:pac.person.first_name }}</span>
+                {% endfor %}
+            </div>
+        </td>
+    </tr>
+{% empty %}
+    <tr><td colspan="2"><em>No cases.</em></td></tr>
+{% endfor %}
+</table>

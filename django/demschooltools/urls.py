@@ -48,6 +48,13 @@ from dst.manual_views import (
     view_manual,
     view_manual_changes,
 )
+from dst.jc_views import (
+    jc_index,
+    view_meeting,
+    view_todays_minutes,
+    view_sm_referrals,
+    view_sm_decisions,
+)
 from dst.people_views import (
     add_person,
     all_people,
@@ -112,7 +119,26 @@ urlpatterns = [
     path("editEntry/<int:object_id>", CreateUpdateEntry.as_view()),
     path("viewEntry/", preview_entry),
     path("viewEntry/<int:object_id>", preview_entry),
-    path("", IndexView.as_view()),
+    # JC routes
+    path("", jc_index),
+    path("jc", jc_index),
+    path("viewToday", view_todays_minutes),
+    path("viewMeeting/<int:meeting_id>", view_meeting),
+    path("viewSchoolMeetingReferrals", view_sm_referrals),
+    path("viewSchoolMeeting", view_sm_decisions),
+    path("editToday", settings_view),
+    path("editResolutionPlanList", settings_view),
+    path("thisWeekReport", settings_view),
+    path("downloadCharges", settings_view),
+    path("enterSchoolMeeting", settings_view),
+    path("editSchoolMeeting/<int:charge_id>", settings_view),
+    path("printMeeting/<int:meeting_id>", settings_view),
+    path("editMeeting/<int:meeting_id>", settings_view),
+    path("viewMeetingResolutionPlans/<int:meeting_id>", settings_view),
+    path("viewPersonHistory/<int:person_id>", settings_view),
+    path("viewRuleHistory/<int:rule_id>", settings_view),
+    path("viewPersonsWriteups/<int:person_id>", settings_view),
+    # Custodia routes
     path("custodia/", IndexView.as_view()),
     path("custodia/error-test", ErrorTestView.as_view()),
     path("custodia/login", LoginView.as_view()),

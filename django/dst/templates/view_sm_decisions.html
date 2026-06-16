@@ -1,0 +1,28 @@
+<h3>School Meeting decisions</h3>
+
+{% if decisions %}
+<table class="table">
+<thead>
+    <th width="100">Case</th>
+    <th>Person</th>
+    {% if org_config.show_entry %}<th width="150">Entry</th>{% endif %}
+    <th>{{ org_config.str_res_plan_cap }}</th>
+    <th>SM Decision</th>
+    <th>Date</th>
+</thead>
+{% for c in decisions %}
+<tr>
+    <td>{{ c.case.case_number }}</td>
+    <td>{% if c.person %}{{ c.person.display_name|default:c.person.first_name }}{% else %}<i>No one</i>{% endif %}</td>
+    {% if org_config.show_entry %}
+    <td>{% if c.rule %}{{ c.rule.number }} {{ c.rule.title }}{% endif %}</td>
+    {% endif %}
+    <td>{{ c.resolution_plan }}</td>
+    <td>{{ c.sm_decision }}</td>
+    <td>{{ c.sm_decision_date|date:"Y-m-d" }}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p>No School Meeting decisions recorded yet.</p>
+{% endif %}

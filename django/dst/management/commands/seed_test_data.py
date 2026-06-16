@@ -13,10 +13,23 @@ from datetime import date, datetime, time, timedelta
 
 from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
+from django.utils import timezone
 from zoneinfo import ZoneInfo
 
 from custodia.models import Swipe, Year
-from dst.models import AttendanceDay, AttendanceWeek, Organization, OrganizationHost, Person, Tag
+from dst.models import (
+    AttendanceDay,
+    AttendanceWeek,
+    Case,
+    Charge,
+    Entry,
+    Meeting,
+    Organization,
+    OrganizationHost,
+    Person,
+    PersonAtMeeting,
+    Tag,
+)
 
 FIRST_NAMES = [
     "Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hank",
@@ -167,6 +180,67 @@ class Command(BaseCommand):
         if created_swipes:
             self.stdout.write(f"  Created {created_swipes} swipe records")
 
+    def _create_jc_data(self, org: Organization, students):
+        today = date.today()
+        meeting, created = Meeting.objects.get_or_create(
+            organization=org,
+            date=today,
+        )
+        if created:
+            self.stdout.write(f"  Created JC meeting for {today}")
+        else:
+            self.stdout.write(f"  Using existing JC meeting for {today}")
+
+        case, created = Case.objects.get_or_create(
+            meeting=meeting,
+            case_number="1",
+            defaults={
+                "findings": "Sample case for local development and testing.",
+                "location": "JC Room",
+                "date": today,
+                "time": "2:00 PM",
+            },
+        )
+        if created:
+            self.stdout.write(f"  Created case #1")
+        else:
+            self.stdout.write(f"  Using existing case #1")
+
+        entry = Entry.objects.filter(
+            section__chapter__organization=org,
+            deleted=False,
+        ).first()
+
+        pleas = ["Guilty", "Not Guilty", "Guilty", "No Contest"]
+        severities = ["Mild", "Moderate", "Serious", "Moderate"]
+        resolutions = [
+            "Complete a community service project",
+            "Write a reflective essay",
+            "Apologize to all involved parties",
+            "Meet with committee for mediation",
+        ]
+
+        created_charges = 0
+        for i, student in enumerate(students[:4]):
+            charge, was_created = Charge.objects.get_or_create(
+                case=case,
+                person=student,
+                defaults={
+                    "rule": entry,
+                    "plea": pleas[i % len(pleas)],
+                    "resolution_plan": resolutions[i % len(resolutions)],
+                    "referred_to_sm": i == 0,
+                    "severity": severities[i % len(severities)],
+                    "rp_complete": i == 1,
+                    "rp_complete_date": timezone.now() if i == 1 else None,
+                },
+            )
+            if was_created:
+                created_charges += 1
+
+        if created_charges:
+            self.stdout.write(f"  Created {created_charges} charges")
+
     @atomic
     def handle(self, *args, **options):
         self.stdout.write("Seeding test data...")
@@ -174,7 +248,8 @@ class Command(BaseCommand):
 
         current_tag = self._create_tag(org, "Current Student",
                                        use_student_display=True,
-                                       show_in_attendance=True)
+                                       show_in_attendance=True,
+                                       show_in_jc=True)
         self._create_tag(org, "Staff", use_student_display=False,
                          show_in_attendance=True)
         self._create_tag(org, "Absent Today", use_student_display=False,
@@ -191,5 +266,6 @@ class Command(BaseCommand):
 
         self._create_swipe_data(students, days_back=5)
         self._create_attendance_data(students, days_back=5)
+        self._create_jc_data(org, students)
 
         self.stdout.write(self.style.SUCCESS("Done seeding test data"))

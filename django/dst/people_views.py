@@ -292,7 +292,7 @@ def edit_person(request: DstHttpRequest, person_id: int):
 
 
 @login_required()
-def settings_view(request: DstHttpRequest):
+def settings_view(request: DstHttpRequest, **kwargs):
     from django.template.loader import render_to_string
     return render_main_template(
         request,

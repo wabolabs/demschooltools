@@ -1,0 +1,6 @@
+<h3>No meeting today</h3>
+<p>There is no meeting scheduled for {{ today }}.</p>
+{% if latest_meeting %}
+<p>The most recent meeting was on <a href="/viewMeeting/{{ latest_meeting.id }}">{{ latest_meeting.date }}</a>.</p>
+{% endif %}
+<p><a href="/editToday" class="btn btn-primary">Create a meeting for today</a></p>

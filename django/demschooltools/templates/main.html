@@ -67,7 +67,7 @@
                             </li>
                         {% endif %}
                         <li {% if menu == "jc" %}class="active"{% endif %}>
-                            <a href="/">{{ org_config.str_jc_name_short }}</a>
+                            <a href="/jc">{{ org_config.str_jc_name_short }}</a>
                         </li>
                         <li {% if menu == "manual" %}class="active"{% endif %}>
                             <a href="/viewManual">{{ org_config.str_manual_title_short }}</a>
@@ -231,7 +231,7 @@
                             <div class="tab-pane active" id="jc">
                                 <div class="subnav">
                                     <a {% if selectedBtn == "jc_home" %}class="active"{% endif %}
-                                       href="/">Home</a>
+                                       href="/jc">Home</a>
                                     <span>
                                         <a href="/viewToday">
                                             View</a> /
@@ -245,14 +245,7 @@
                                        href="/thisWeekReport">Weekly Report</a>
                                     <a {% if selectedBtn == "view_referred" %}class="active"{% endif %}
                                        href="/viewSchoolMeetingReferrals">
-                                        {{ messages.charges_referred_to_sm }}
-                                        {% with sm_charges=active_school_meeting_referrals %}
-                                            {% if sm_charges|length > 0 %}
-                                                <span class="badge">
-                                                    {{ sm_charges|length }}
-                                                </span>
-                                            {% endif %}
-                                        {% endwith %}
+                                        Charges referred to S.M.
                                     </a>
                                     <a {% if selectedBtn == "view_sm" %}class="active"{% endif %}
                                        href="/viewSchoolMeeting">

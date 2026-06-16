@@ -1,0 +1,31 @@
+<h3>Charges referred to School Meeting</h3>
+
+{% if sm_charges %}
+<table class="table">
+<thead>
+    <th width="100">Case</th>
+    <th>Person</th>
+    {% if org_config.show_entry %}<th width="150">Entry</th>{% endif %}
+    {% if org_config.show_plea %}<th width="70">Plea</th>{% endif %}
+    <th>{{ org_config.str_res_plan_cap }}</th>
+    <th>Findings</th>
+</thead>
+{% for c in sm_charges %}
+<tr>
+    <td>{{ c.case.case_number }}</td>
+    <td>{% if c.person %}{{ c.person.display_name|default:c.person.first_name }}{% else %}<i>No one</i>{% endif %}</td>
+    {% if org_config.show_entry %}
+    <td>{% if c.rule %}{{ c.rule.number }} {{ c.rule.title }}{% endif %}</td>
+    {% endif %}
+    {% if org_config.show_plea %}
+    <td>{{ c.plea }}</td>
+    {% endif %}
+    <td>{{ c.resolution_plan }}</td>
+    <td>{{ c.case.findings }}</td>
+</tr>
+{% endfor %}
+</table>
+<a class="btn btn-primary" href="/enterSchoolMeeting">Record School Meeting decisions</a>
+{% else %}
+<p>No charges awaiting a decision from School Meeting.</p>
+{% endif %}

@@ -687,6 +687,12 @@ class CaseReference(models.Model):
 
 
 class PersonAtMeeting(models.Model):
+    ROLE_JC_CHAIR = 0
+    ROLE_JC_MEMBER = 1
+    ROLE_NOTE_TAKER = 2
+    ROLE_JC_SUB = 3
+    ROLE_RUNNER = 4
+
     class Meta:
         db_table = "person_at_meeting"
 
@@ -698,6 +704,9 @@ class PersonAtMeeting(models.Model):
 
 
 class PersonAtCase(models.Model):
+    ROLE_TESTIFIER = 0
+    ROLE_WRITER = 1
+
     class Meta:
         db_table = "person_at_case"
 
