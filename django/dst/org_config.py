@@ -9,6 +9,9 @@ ALL_ORG_CONFIGS: dict[str, "OrgConfig"] = {}
 def get_org_config(org: Organization) -> "OrgConfig":
     init_org_configs()
 
+    if org.name not in ALL_ORG_CONFIGS:
+        ALL_ORG_CONFIGS[org.name] = OrgConfig(org.name)
+
     return ALL_ORG_CONFIGS[org.name]
 
 
