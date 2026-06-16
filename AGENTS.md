@@ -11,7 +11,7 @@
 |----------|---------------------------------------------------------------------------------------------------------|----------------------|
 | Backend  | You must implement all backend work with Django under `django/`. New apps live beside `custodia` and `dst`, are wired into `django/demschooltools/settings.py`, and exposed through `django/demschooltools/urls.py`. | Use `uv run manage.py startapp`, register the app, add URLs/migrations/tests in the same subtree. |
 | Frontend | You must implement all frontend work with React under `react/` using the existing Vite build (see `react/vite.config.js`). Update the manifest entries and Django templates (`django/dst/templates/*.html`) to load new bundles via `django-vite`. | Run `npm run watch` during development and `vite build` only via CI/deploy scripts. |
-| Legacy   | The historical Play/Scala + JVM stack under `app/`, `conf/`, `project/`, `target/`, `authLibrary/`, `modelsLibrary/`, `lib/`, `node_modules/`, and related webpack config in the repo root (`/package.json`) is frozen. Do **not** modify or expand it without explicit human approval. |
+| Legacy   | The historical Play/Scala + JVM stack has been fully removed. The project is now pure Django + React. All legacy code was deleted in commit 162a65d8. |
 
 ## Current Django Architecture
 
