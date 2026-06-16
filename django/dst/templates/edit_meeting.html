@@ -1,0 +1,237 @@
+<style>body { margin-left: 20px; }</style>
+
+<h2>{{ org_config.str_jc_name_short }} minutes &mdash; {{ meeting.date }}</h2>
+
+<form method="POST">
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" class="form-control" value="{{ meeting.date|date:'Y-m-d' }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+      <div class="form-group">
+        <label>Chair</label>
+        <select name="chair" class="form-control">
+          <option value="">--</option>
+          {% for p in jc_people %}
+            <option value="{{ p.id }}" {% if chair and chair.person_id == p.id %}selected{% endif %}>{{ p.display_name|default:p.first_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="form-group">
+        <label>Notetaker</label>
+        <select name="notetaker" class="form-control">
+          <option value="">--</option>
+          {% for p in jc_people %}
+            <option value="{{ p.id }}" {% if notetaker and notetaker.person_id == p.id %}selected{% endif %}>{{ p.display_name|default:p.first_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label>Committee members</label>
+        <select name="committee" multiple class="form-control" size="5">
+          {% for p in jc_people %}
+            <option value="{{ p.id }}" {% if p.id in committee_ids %}selected{% endif %}>{{ p.display_name|default:p.first_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="form-group">
+        <label>Subs</label>
+        <select name="subs" multiple class="form-control" size="5">
+          {% for p in jc_people %}
+            <option value="{{ p.id }}" {% if p.id in sub_ids %}selected{% endif %}>{{ p.display_name|default:p.first_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="form-group">
+        <label>Runners</label>
+        <select name="runners" multiple class="form-control" size="5">
+          {% for p in jc_people %}
+            <option value="{{ p.id }}" {% if p.id in runner_ids %}selected{% endif %}>{{ p.display_name|default:p.first_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <input type="submit" class="btn btn-primary" value="Save meeting">
+  <a href="/viewMeeting/{{ meeting.id }}" class="btn btn-default">Cancel</a>
+</form>
+
+<hr>
+<h3>Cases</h3>
+
+{% for c in meeting.case_set.all %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>Case #{{ c.case_number }}</strong>
+    <form method="POST" action="/deleteCase/{{ c.id }}" style="display:inline" onsubmit="return confirm('Delete this case?')">
+      {% csrf_token %}
+      <button class="btn btn-danger btn-xs" style="float:right">Delete</button>
+    </form>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/saveCase/{{ c.id }}">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" class="form-control" value="{{ c.location }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Date of event</label>
+            <input type="date" name="date" class="form-control" value="{{ c.date|date:'Y-m-d'|default:'' }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>Time</label>
+            <input type="text" name="time" class="form-control" value="{{ c.time }}">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Findings</label>
+        <textarea name="findings" class="form-control" rows="3">{{ c.findings }}</textarea>
+      </div>
+      <input type="submit" class="btn btn-primary btn-sm" value="Save case">
+    </form>
+
+    <h4 style="margin-top:15px">Charges</h4>
+    {% for charge in c.charge_set.all %}
+    <div class="charge" style="border:1px solid #ddd; padding:8px; margin:8px 0; background:#f9f9f9;">
+      <form method="POST" action="/saveCharge/{{ charge.id }}">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-3">
+            <select name="person_id" class="form-control input-sm">
+              <option value="">-- Person --</option>
+              {% for p in jc_people %}
+                <option value="{{ p.id }}" {% if charge.person_id == p.id %}selected{% endif %}>{{ p.display_name|default:p.first_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select name="rule_id" class="form-control input-sm">
+              <option value="">-- Rule --</option>
+              {% for rule in org_config.all_entries|default:'' %}
+                <option value="{{ rule.id }}" {% if charge.rule_id == rule.id %}selected{% endif %}>{{ rule.number }} {{ rule.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select name="plea" class="form-control input-sm">
+              <option value="">-- Plea --</option>
+              <option value="Guilty" {% if charge.plea == "Guilty" %}selected{% endif %}>Guilty</option>
+              <option value="Not Guilty" {% if charge.plea == "Not Guilty" %}selected{% endif %}>Not Guilty</option>
+              <option value="No Contest" {% if charge.plea == "No Contest" %}selected{% endif %}>No Contest</option>
+              <option value="N/A" {% if charge.plea == "N/A" %}selected{% endif %}>N/A</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select name="severity" class="form-control input-sm">
+              <option value="">-- Severity --</option>
+              <option value="Mild" {% if charge.severity == "Mild" %}selected{% endif %}>Mild</option>
+              <option value="Moderate" {% if charge.severity == "Moderate" %}selected{% endif %}>Moderate</option>
+              <option value="Serious" {% if charge.severity == "Serious" %}selected{% endif %}>Serious</option>
+              <option value="Severe" {% if charge.severity == "Severe" %}selected{% endif %}>Severe</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-danger btn-xs" formaction="/deleteCharge/{{ charge.id }}" formmethod="POST" onclick="return confirm('Delete this charge?')">Delete</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:5px">
+          <div class="col-md-6">
+            <textarea name="resolution_plan" class="form-control input-sm" rows="2" placeholder="Resolution plan...">{{ charge.resolution_plan }}</textarea>
+          </div>
+          <div class="col-md-3">
+            <label class="checkbox-inline"><input type="checkbox" name="referred_to_sm" {% if charge.referred_to_sm %}checked{% endif %}> Refer to SM</label>
+          </div>
+        </div>
+        <input type="submit" class="btn btn-success btn-xs" style="margin-top:5px" value="Save charge">
+      </form>
+    </div>
+    {% endfor %}
+
+    <h4>Add charge</h4>
+    <form method="POST" action="/addCharge/{{ c.id }}" class="form-inline">
+      {% csrf_token %}
+      <div class="row">
+        <div class="col-md-3">
+          <select name="person_id" class="form-control input-sm">
+            <option value="">-- Person --</option>
+            {% for p in jc_people %}
+              <option value="{{ p.id }}">{{ p.display_name|default:p.first_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="text" name="plea" class="form-control input-sm" placeholder="Plea">
+        </div>
+        <div class="col-md-4">
+          <input type="text" name="resolution_plan" class="form-control input-sm" placeholder="Resolution plan">
+        </div>
+        <div class="col-md-2">
+          <input type="submit" class="btn btn-primary btn-xs" value="Add charge">
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<h3>Add case</h3>
+<form method="POST" action="/createCase" class="form-inline">
+  {% csrf_token %}
+  <input type="hidden" name="meeting_id" value="{{ meeting.id }}">
+  <div class="row">
+    <div class="col-md-3">
+      <input type="text" name="location" class="form-control" placeholder="Location">
+    </div>
+    <div class="col-md-3">
+      <input type="text" name="time" class="form-control" placeholder="Time">
+    </div>
+    <div class="col-md-4">
+      <input type="text" name="findings" class="form-control" placeholder="Findings (preliminary)">
+    </div>
+    <div class="col-md-2">
+      <input type="submit" class="btn btn-primary" value="Add case">
+    </div>
+  </div>
+</form>
+
+{% if open_cases %}
+<h3>Cases to be continued</h3>
+<ul>
+  {% for c in open_cases %}
+    <li>
+      #{{ c.case_number }} | {{ c.location }} | {{ c.findings|truncatewords:20 }}
+      <form method="POST" action="/continueCase/{{ meeting.id }}/{{ c.id }}" style="display:inline">
+        {% csrf_token %}
+        <button class="btn btn-xs btn-success">Continue</button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+{% endif %}

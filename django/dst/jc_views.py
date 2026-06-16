@@ -729,6 +729,200 @@ def enter_school_meeting(request: DstHttpRequest):
 
 
 @login_required()
+def edit_today(request: DstHttpRequest):
+    today = timezone.localdate()
+    meeting = Meeting.objects.filter(organization=request.org, date=today).first()
+    if meeting is None:
+        meeting = Meeting.objects.create(organization=request.org, date=today)
+    return edit_meeting(request, meeting.id)
+
+
+@login_required()
+def edit_meeting(request: DstHttpRequest, meeting_id: int):
+    meeting = Meeting.objects.filter(organization=request.org, id=meeting_id).first()
+    if meeting is None:
+        return HttpResponseNotFound()
+
+    jc_people = Person.objects.filter(
+        organization=request.org, tags__id__in=list(
+            Tag.objects.filter(organization=request.org, show_in_jc=True).values_list("id", flat=True)
+        )
+    ).distinct().order_by("display_name", "first_name")
+
+    open_cases = Case.objects.filter(
+        meeting__organization=request.org,
+        date_closed__isnull=True,
+    ).exclude(meeting=meeting).order_by("-meeting__date")
+
+    if request.method == "POST":
+        meeting.date = date.fromisoformat(request.POST.get("date", str(meeting.date)))
+        meeting.save()
+
+        # Update people at meeting
+        PersonAtMeeting.objects.filter(meeting=meeting).delete()
+        for role_field, role_val in [
+            ("chair", PersonAtMeeting.ROLE_JC_CHAIR),
+            ("notetaker", PersonAtMeeting.ROLE_NOTE_TAKER),
+            ("committee", PersonAtMeeting.ROLE_JC_MEMBER),
+            ("subs", PersonAtMeeting.ROLE_JC_SUB),
+            ("runners", PersonAtMeeting.ROLE_RUNNER),
+        ]:
+            person_ids = request.POST.getlist(role_field)
+            for pid in person_ids:
+                if pid:
+                    PersonAtMeeting.objects.create(
+                        meeting=meeting,
+                        person_id=int(pid),
+                        role=role_val,
+                    )
+
+        return redirect(f"/viewMeeting/{meeting.id}")
+
+    chair = meeting.personatmeeting_set.filter(role=PersonAtMeeting.ROLE_JC_CHAIR).first()
+    notetaker = meeting.personatmeeting_set.filter(role=PersonAtMeeting.ROLE_NOTE_TAKER).first()
+    committee_ids = list(meeting.personatmeeting_set.filter(role=PersonAtMeeting.ROLE_JC_MEMBER).values_list("person_id", flat=True))
+    sub_ids = list(meeting.personatmeeting_set.filter(role=PersonAtMeeting.ROLE_JC_SUB).values_list("person_id", flat=True))
+    runner_ids = list(meeting.personatmeeting_set.filter(role=PersonAtMeeting.ROLE_RUNNER).values_list("person_id", flat=True))
+
+    return render_main_template(
+        request,
+        "jc",
+        render_to_string(
+            "edit_meeting.html",
+            {
+                "meeting": meeting,
+                "jc_people": jc_people,
+                "open_cases": open_cases,
+                "chair": chair,
+                "notetaker": notetaker,
+                "committee_ids": committee_ids,
+                "sub_ids": sub_ids,
+                "runner_ids": runner_ids,
+                "org_config": get_org_config(request.org),
+            },
+            request=request,
+        ),
+        f"Edit {get_org_config(request.org).str_jc_name_short} minutes — {meeting.date}",
+    )
+
+
+@login_required()
+def create_case(request: DstHttpRequest):
+    meeting_id = request.POST.get("meeting_id")
+    meeting = Meeting.objects.filter(organization=request.org, id=meeting_id).first()
+    if not meeting:
+        return HttpResponseNotFound()
+
+    case_count = meeting.case_set.count()
+    next_num = f"{case_count + 1:02d}"
+    case_num = f"{meeting.date.strftime('%y%m%d')}-{next_num}"
+
+    case = Case.objects.create(
+        case_number=case_num,
+        meeting=meeting,
+        findings=request.POST.get("findings", ""),
+        location=request.POST.get("location", ""),
+        date=date.fromisoformat(request.POST.get("date", str(meeting.date))) if request.POST.get("date") else meeting.date,
+        time=request.POST.get("time", ""),
+    )
+    return redirect(f"/editMeeting/{meeting.id}")
+
+
+@login_required()
+def save_case(request: DstHttpRequest, case_id: int):
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    if not case:
+        return HttpResponseNotFound()
+
+    case.findings = request.POST.get("findings", case.findings)
+    case.location = request.POST.get("location", case.location)
+    case.time = request.POST.get("time", case.time)
+    if request.POST.get("date"):
+        try:
+            case.date = date.fromisoformat(request.POST["date"])
+        except ValueError:
+            pass
+    case.save()
+    return redirect(f"/editMeeting/{case.meeting.id}")
+
+
+@login_required()
+def delete_case(request: DstHttpRequest, case_id: int):
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    if case:
+        meeting_id = case.meeting.id
+        case.delete()
+        return redirect(f"/editMeeting/{meeting_id}")
+    return HttpResponseNotFound()
+
+
+@login_required()
+def add_charge(request: DstHttpRequest, case_id: int):
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    if not case:
+        return HttpResponseNotFound()
+
+    person_id = request.POST.get("person_id")
+    rule_id = request.POST.get("rule_id")
+    Charge.objects.create(
+        case=case,
+        person_id=person_id if person_id else None,
+        rule_id=rule_id if rule_id else None,
+        plea=request.POST.get("plea", ""),
+        resolution_plan=request.POST.get("resolution_plan", ""),
+        severity=request.POST.get("severity", ""),
+        referred_to_sm=request.POST.get("referred_to_sm") == "on",
+    )
+    return redirect(f"/editMeeting/{case.meeting.id}")
+
+
+@login_required()
+def save_charge(request: DstHttpRequest, charge_id: int):
+    charge = Charge.objects.filter(id=charge_id, case__meeting__organization=request.org).first()
+    if not charge:
+        return HttpResponseNotFound()
+
+    person_id = request.POST.get("person_id")
+    rule_id = request.POST.get("rule_id")
+    charge.person_id = int(person_id) if person_id else None
+    charge.rule_id = int(rule_id) if rule_id else None
+    charge.plea = request.POST.get("plea", charge.plea)
+    charge.resolution_plan = request.POST.get("resolution_plan", charge.resolution_plan)
+    charge.severity = request.POST.get("severity", charge.severity)
+    charge.referred_to_sm = request.POST.get("referred_to_sm") == "on"
+    charge.save()
+    return redirect(f"/editMeeting/{charge.case.meeting.id}")
+
+
+@login_required()
+def delete_charge(request: DstHttpRequest, charge_id: int):
+    charge = Charge.objects.filter(id=charge_id, case__meeting__organization=request.org).first()
+    if charge:
+        meeting_id = charge.case.meeting.id
+        charge.delete()
+        return redirect(f"/editMeeting/{meeting_id}")
+    return HttpResponseNotFound()
+
+
+@login_required()
+def continue_case(request: DstHttpRequest, meeting_id: int, case_id: int):
+    meeting = Meeting.objects.filter(organization=request.org, id=meeting_id).first()
+    old_case = Case.objects.filter(id=case_id, meeting__organization=request.org, date_closed__isnull=True).first()
+    if not meeting or not old_case or old_case.meeting == meeting:
+        return HttpResponseNotFound()
+    case_count = meeting.case_set.count()
+    next_num = f"{case_count + 1:02d}"
+    case_num = f"{meeting.date.strftime('%y%m%d')}-{next_num}"
+    Case.objects.create(
+        case_number=case_num,
+        meeting=meeting,
+        findings=f"Continued from case #{old_case.case_number}: {old_case.findings}",
+        location=old_case.location,
+    )
+    return redirect(f"/editMeeting/{meeting.id}")
+
+
+@login_required()
 def edit_school_meeting_decision(request: DstHttpRequest, charge_id: int):
     charge = Charge.objects.filter(
         id=charge_id,
