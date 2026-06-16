@@ -1,7 +1,10 @@
+import csv
+import io
+
 from django.contrib.auth.decorators import login_required as django_login_required
 from django.db.models import Q
 from django.db.transaction import atomic
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -427,3 +430,86 @@ def add_comment(request: DstHttpRequest):
     if ref:
         return redirect(ref)
     return redirect("/people")
+
+
+@login_required()
+def get_tag_members(request: DstHttpRequest):
+    tag_id = request.GET.get("tagId")
+    family_mode = request.GET.get("familyMode", "false")
+    if not tag_id:
+        return JsonResponse([], safe=False)
+    tag = Tag.objects.filter(organization=request.org, id=tag_id).first()
+    if not tag:
+        return JsonResponse([], safe=False)
+    members = Person.objects.filter(organization=request.org, tags=tag).order_by("display_name", "first_name")
+    data = [{"id": p.id, "name": p.get_name()} for p in members]
+    return JsonResponse(data, safe=False)
+
+
+@login_required()
+def download_tag(request: DstHttpRequest, tag_id: int):
+    tag = Tag.objects.filter(organization=request.org, id=tag_id).first()
+    if not tag:
+        return HttpResponseNotFound()
+    members = Person.objects.filter(organization=request.org, tags=tag).order_by("display_name", "first_name")
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["Name", "Email"])
+    for p in members:
+        writer.writerow([p.get_name(), p.email])
+    response = HttpResponse(buffer.getvalue(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="tag_{tag.title}.csv"'
+    return response
+
+
+@login_required()
+def add_people_from_tag(request: DstHttpRequest):
+    src_tag_id = request.POST.get("srcTagId")
+    dst_tag_id = request.POST.get("dstTagId")
+    src = Tag.objects.filter(organization=request.org, id=src_tag_id).first()
+    dst = Tag.objects.filter(organization=request.org, id=dst_tag_id).first()
+    if src and dst:
+        for p in Person.objects.filter(organization=request.org, tags=src):
+            p.tags.add(dst)
+    return redirect("/viewAllTags")
+
+
+@login_required()
+def add_people_to_tag(request: DstHttpRequest):
+    tag_id = request.POST.get("tagId")
+    person_ids = request.POST.getlist("person_ids")
+    tag = Tag.objects.filter(organization=request.org, id=tag_id).first()
+    if tag:
+        for pid in person_ids:
+            try:
+                p = Person.objects.get(id=pid, organization=request.org)
+                p.tags.add(tag)
+            except Person.DoesNotExist:
+                pass
+    return redirect(f"/viewTag/{tag_id}" if tag_id else "/viewAllTags")
+
+
+@login_required()
+def remove_people_from_tag(request: DstHttpRequest):
+    tag_id = request.POST.get("tagId")
+    person_ids = request.POST.getlist("person_ids")
+    tag = Tag.objects.filter(organization=request.org, id=tag_id).first()
+    if tag:
+        for pid in person_ids:
+            try:
+                p = Person.objects.get(id=pid, organization=request.org)
+                p.tags.remove(tag)
+            except Person.DoesNotExist:
+                pass
+    return redirect(f"/viewTag/{tag_id}" if tag_id else "/viewAllTags")
+
+
+@login_required()
+def undo_tag_changes(request: DstHttpRequest):
+    person_id = request.POST.get("personId")
+    tag_id = request.POST.get("tagId")
+    if person_id and tag_id:
+        PersonTagChange.objects.filter(
+            person_id=person_id, tag_id=tag_id, organization=request.org
+        ).delete()
+    return redirect(request.META.get("HTTP_REFERER", "/people"))

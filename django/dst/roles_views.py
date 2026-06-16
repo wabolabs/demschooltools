@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required as django_login_required
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -170,3 +171,22 @@ def roles_new(request: DstHttpRequest):
         "New Role",
         selected_button="roles_new",
     )
+
+
+@login_required()
+def roles_update(request: DstHttpRequest, role_id: int):
+    try:
+        role = Role.objects.get(id=role_id, organization=request.org)
+    except Role.DoesNotExist:
+        return JsonResponse({"error": "not found"}, status=404)
+    role.name = request.POST.get("name", role.name)
+    role.notes = request.POST.get("notes", role.notes)
+    role.description = request.POST.get("description", role.description)
+    role.save()
+    return JsonResponse({"ok": True})
+
+
+@login_required()
+def roles_delete(request: DstHttpRequest, role_id: int):
+    Role.objects.filter(id=role_id, organization=request.org).delete()
+    return JsonResponse({"ok": True})

@@ -1,9 +1,18 @@
 from django.contrib.auth.decorators import login_required as django_login_required
 from django.db.transaction import atomic
+from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 
-from dst.models import AllowedIp, User, UserRole
+from dst.models import (
+    AllowedIp,
+    NotificationRule,
+    Tag,
+    Task,
+    TaskList,
+    User,
+    UserRole,
+)
 from dst.org_config import get_org_config
 from dst.utils import DstHttpRequest, render_main_template
 
@@ -160,3 +169,55 @@ def settings_password(request: DstHttpRequest):
 @login_required()
 def settings_view(request: DstHttpRequest, **kwargs):
     return settings_index(request)
+
+
+@login_required()
+def settings_notifications(request: DstHttpRequest):
+    rules = NotificationRule.objects.filter(organization=request.org)
+    return render_main_template(
+        request, "settings",
+        render_to_string("settings_notifications.html", {"rules": rules, "org_config": get_org_config(request.org)}, request=request),
+        "Notifications",
+    )
+
+
+@login_required()
+def settings_checklist(request: DstHttpRequest, checklist_id: int):
+    tl = TaskList.objects.filter(organization=request.org, id=checklist_id).first()
+    if not tl:
+        return HttpResponseNotFound()
+    tasks = Task.objects.filter(task_list=tl).order_by("sort_order")
+    return render_main_template(
+        request, "settings",
+        render_to_string("settings_checklist.html", {"task_list": tl, "tasks": tasks, "org_config": get_org_config(request.org)}, request=request),
+        f"Checklist: {tl.title}",
+    )
+
+
+@login_required()
+def settings_task(request: DstHttpRequest, task_id: int):
+    task = Task.objects.filter(id=task_id, task_list__organization=request.org).first()
+    if not task:
+        return HttpResponseNotFound()
+    return render_main_template(
+        request, "settings",
+        render_to_string("settings_task.html", {"task": task, "org_config": get_org_config(request.org)}, request=request),
+        f"Task: {task.title}",
+    )
+
+
+@login_required()
+def settings_edit_user(request: DstHttpRequest, user_id: int):
+    u = User.objects.filter(organization=request.org, id=user_id).first()
+    if not u:
+        return HttpResponseNotFound()
+    if request.method == "POST":
+        u.name = request.POST.get("name", u.name)
+        u.email = request.POST.get("email", u.email)
+        u.save()
+        return redirect("/settings/access")
+    return render_main_template(
+        request, "settings",
+        render_to_string("settings_edit_user.html", {"edit_user": u, "org_config": get_org_config(request.org)}, request=request),
+        f"Edit user: {u.name}",
+    )

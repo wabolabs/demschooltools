@@ -448,6 +448,108 @@ class AttendanceSaveDayView(LoginRequiredMixin, View):
         return redirect(request.META.get("HTTP_REFERER", "/attendance"))
 
 
+class AttendanceCheckinView(LoginRequiredMixin, View):
+    login_url = "/login"
+
+    def get(self, request: DstHttpRequest):
+        return render_main_template(
+            request, "attendance",
+            render_to_string("attendance_checkin.html", {"org_config": get_org_config(request.org)}, request=request),
+            "Check-in",)
+
+
+class AttendanceCheckinDataView(LoginRequiredMixin, View):
+    login_url = "/login"
+
+    def get(self, request: DstHttpRequest):
+        people = Person.objects.filter(organization=request.org).exclude(pin="").values("id", "display_name", "first_name", "pin")
+        return JsonResponse(list(people), safe=False)
+
+
+class AttendanceEditCodeView(LoginRequiredMixin, View):
+    login_url = "/login"
+
+    def get(self, request: DstHttpRequest, code_id: int):
+        code = AttendanceCode.objects.filter(organization=request.org, id=code_id).first()
+        if not code:
+            return HttpResponseNotFound()
+        return render_main_template(
+            request, "attendance",
+            render_to_string("attendance_code_form.html", {"code": code, "org_config": get_org_config(request.org)}, request=request),
+            f"Edit code: {code.code}")
+
+    def post(self, request: DstHttpRequest, code_id: int):
+        code = AttendanceCode.objects.filter(organization=request.org, id=code_id).first()
+        if code:
+            code.code = request.POST.get("code", code.code)
+            code.description = request.POST.get("description", code.description)
+            code.color = request.POST.get("color", code.color)
+            code.counts_toward_attendance = request.POST.get("counts_toward_attendance") == "on"
+            code.not_counted = request.POST.get("not_counted") == "on"
+            code.save()
+        return redirect("/attendance/codes")
+
+
+class AttendanceCreatePersonWeekView(LoginRequiredMixin, View):
+    login_url = "/login"
+
+    def post(self, request: DstHttpRequest):
+        from datetime import timedelta
+        person_id = request.POST.get("person_id")
+        monday_str = request.POST.get("monday", "")
+        try:
+            monday = date.fromisoformat(monday_str)
+        except ValueError:
+            monday = timezone.localdate() - timedelta(days=timezone.localdate().weekday())
+        if person_id:
+            try:
+                p = Person.objects.get(id=person_id, organization=request.org)
+                for i in range(5):
+                    AttendanceDay.objects.get_or_create(person=p, day=monday + timedelta(days=i))
+                AttendanceWeek.objects.get_or_create(person=p, monday=monday)
+            except Person.DoesNotExist:
+                pass
+        return redirect("/attendance/viewWeek")
+
+
+class AttendanceDeletePersonWeekView(LoginRequiredMixin, View):
+    login_url = "/login"
+
+    def post(self, request: DstHttpRequest):
+        person_id = request.POST.get("person_id")
+        monday_str = request.POST.get("monday", "")
+        try:
+            monday = date.fromisoformat(monday_str)
+        except ValueError:
+            return redirect("/attendance")
+        AttendanceDay.objects.filter(person_id=person_id, day__gte=monday, day__lt=monday + timedelta(days=5)).delete()
+        AttendanceWeek.objects.filter(person_id=person_id, monday=monday).delete()
+        return redirect("/attendance/viewWeek")
+
+
+class AttendanceSaveOffCampusView(LoginRequiredMixin, View):
+    login_url = "/login"
+
+    def post(self, request: DstHttpRequest):
+        for i in range(1, 11):
+            day_id = request.POST.get(f"day_id_{i}")
+            dep = request.POST.get(f"departure_{i}")
+            ret = request.POST.get(f"return_{i}")
+            if day_id and (dep or ret):
+                ad = AttendanceDay.objects.filter(id=day_id, person__organization=request.org).first()
+                if ad:
+                    if dep:
+                        try:
+                            ad.off_campus_departure_time = datetime.strptime(dep, "%H:%M").time()
+                        except ValueError:
+                            pass
+                    if ret:
+                        try:
+                            ad.off_campus_return_time = datetime.strptime(ret, "%H:%M").time()
+                        except ValueError:
+                            pass
+                    ad.save()
+        return redirect("/attendance/offCampusTime")
 class AttendanceSaveWeekView(LoginRequiredMixin, View):
     login_url = "/login"
 

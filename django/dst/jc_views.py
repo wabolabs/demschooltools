@@ -1094,5 +1094,25 @@ def view_simple_rps(request: DstHttpRequest):
             "charges": charges,
             "org_config": get_org_config(request.org),
         }, request=request),
-        f"{get_org_config(request.org).str_res_plans_cap} — Simple view",
-    )
+            f"{get_org_config(request.org).str_res_plans_cap} — Simple view",
+        )
+
+
+@login_required()
+def legacy_person_history(request: DstHttpRequest, person_id: int):
+    return redirect(f"/viewPersonHistory/{person_id}")
+
+
+@login_required()
+def legacy_rule_history(request: DstHttpRequest, rule_id: int):
+    return redirect(f"/viewRuleHistory/{rule_id}")
+
+
+@login_required()
+def legacy_person_rule_history(request: DstHttpRequest, person_id: int, rule_id: int):
+    return redirect(f"/viewPersonHistory/{person_id}")
+
+
+@login_required()
+def download_meeting_rps(request: DstHttpRequest, meeting_id: int):
+    return view_meeting_resolution_plans(request, meeting_id)

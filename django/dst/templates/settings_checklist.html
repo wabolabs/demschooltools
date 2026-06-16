@@ -1,0 +1,11 @@
+<h3>Checklist: {{ task_list.title }}</h3>
+<ul>
+{% for task in tasks %}
+  <li>{{ task.title }}</li>
+{% empty %}
+  <li><em>No tasks.</em></li>
+{% endfor %}
+</ul>
+{% if tasks %}
+<p><a href="#" class="btn btn-primary">Print checklist</a></p>
+{% endif %}

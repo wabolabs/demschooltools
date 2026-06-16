@@ -1,0 +1,11 @@
+<h3>Notification Rules</h3>
+<p>Notification rules are not yet implemented in the Django UI. Configure them through the admin interface.</p>
+{% if rules %}
+<ul>
+{% for r in rules %}
+  <li>{{ r.the_type }} → {{ r.email }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p><em>No notification rules defined.</em></p>
+{% endif %}
