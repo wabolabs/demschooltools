@@ -59,19 +59,26 @@ class IndexView(View):
 
 class LoginView(View):
     def get(self, request):
-        return render(request, "login.html")
+        return render(request, "login.html", {"error": ""})
 
     def post(self, request: HttpRequest):
         email = request.POST.get("username", "")
         password = request.POST.get("password", "")
+        error = ""
 
         try:
             user: User = User.objects.get(email=email)
         except User.DoesNotExist:
-            return redirect_to_login("")
+            error = "Invalid username or password."
+            return render(request, "login.html", {"error": error})
 
-        if not user.check_password(password) or not user.is_active:
-            return redirect_to_login("")
+        if not user.check_password(password):
+            error = "Invalid username or password."
+            return render(request, "login.html", {"error": error})
+
+        if not user.is_active:
+            error = "This account is inactive."
+            return render(request, "login.html", {"error": error})
 
         token = jwt.encode(
             {
@@ -87,7 +94,7 @@ class LoginView(View):
 
         auth_login(request, user)
 
-        response = redirect("/custodia")
+        response = redirect("/jc")
         response.set_cookie("PLAY_SESSION", token)
         return response
 

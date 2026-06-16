@@ -79,6 +79,9 @@
               Existing Users:
             </div>
             <div class="panel-body">
+              {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+              {% endif %}
               <form method="POST" action="/custodia/login">
                 {% csrf_token %}
                 <div class="form-group">

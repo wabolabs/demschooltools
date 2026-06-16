@@ -20,8 +20,9 @@ from django.shortcuts import redirect
 from django.urls import include, path, register_converter
 
 
-def login_redirect(request):
+def login_view(request):
     return redirect("/custodia/login")
+
 
 from custodia.views import (
     AbsentView,
@@ -175,7 +176,7 @@ urlpatterns = [
     path("custodia/login", LoginView.as_view()),
     path("custodia/logout", LogoutView.as_view()),
     path("health/", health),
-    path("login", login_redirect),
+    path("login", login_view),
     path("logout", LogoutView.as_view()),
     path("attendance", SignInSheetView.as_view()),
     path("attendance/", SignInSheetView.as_view()),
