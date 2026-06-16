@@ -109,6 +109,7 @@ class PlaySessionMiddleware(MiddlewareMixin):
         new_user = get_user_for_play_session(request)
 
         org = Organization.objects.get(hosts__host=request.get_host())
+        request.org = org
 
         if new_user is None:
             new_user = get_ip_user(request, org)
@@ -127,5 +128,4 @@ class PlaySessionMiddleware(MiddlewareMixin):
                 auth.logout(request)
                 auth.login(request, new_user, "demschooltools.auth.PlaySessionBackend")
 
-            request.org = org
             LOGGER.info(f"host={request.get_host()}, organization={request.org}")

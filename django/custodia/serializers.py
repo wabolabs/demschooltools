@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 
 class SchoolInfoSerializer(serializers.Serializer):
-    _id = serializers.IntegerField(source="id")
+    _id = serializers.IntegerField()
     name = serializers.CharField()
     timezone = serializers.CharField()
 

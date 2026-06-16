@@ -102,7 +102,9 @@ class LogoutView(View):
         return response
 
 
-def is_custodia_admin(user: User) -> bool:
+def is_custodia_admin(user) -> bool:
+    if user.is_anonymous:
+        return False
     return user.hasRole(UserRole.ATTENDANCE)
 
 

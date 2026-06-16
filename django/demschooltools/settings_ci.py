@@ -3,9 +3,9 @@ import os
 from demschooltools.settings import *  # noqa: F403
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "ci-insecure-key")
-DEBUG = False
+DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = ["*"]
-DJANGO_VITE = {"default": {"dev_mode": False}}
+DJANGO_VITE = {"default": {"dev_mode": False, "manifest_path": BASE_DIR / "static-vite" / "manifest.json"}}  # noqa: F405
 
 DATABASES = {
     "default": {
@@ -20,3 +20,4 @@ DATABASES = {
 
 APPLICATION_SECRET = os.environ.get("APPLICATION_SECRET", "ci-test-secret")
 ROLLBAR = dict(ROLLBAR, access_token="", environment="ci")  # noqa: F405
+STATIC_ROOT = os.environ.get("STATIC_ROOT", "/tmp/django-static")
