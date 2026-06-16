@@ -1,0 +1,18 @@
+<h3>{{ org_config.str_res_plans_cap }} — {{ meeting.date }}</h3>
+<p><a href="/viewMeeting/{{ meeting.id }}" class="btn btn-default">View meeting</a></p>
+
+<table class="table">
+<thead><tr><th>#<th>Person<th>Entry<th>{{ org_config.str_res_plan_cap }}</tr></thead>
+<tbody>
+{% for c in charges %}
+<tr>
+  <td>{{ c.case.case_number }}</td>
+  <td>{% if c.person %}{{ c.person.display_name|default:c.person.first_name }}{% endif %}</td>
+  <td>{% if c.rule %}{{ c.rule.number }} {{ c.rule.title }}{% endif %}</td>
+  <td>{{ c.resolution_plan }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="4"><em>No {{ org_config.str_res_plans }}.</em></td></tr>
+{% endfor %}
+</tbody>
+</table>

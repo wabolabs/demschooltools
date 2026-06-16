@@ -1,0 +1,16 @@
+<div class="charge" style="border:1px solid #ccc; padding:8px; margin:8px 0;">
+  <strong>Case #{{ c.case.case_number }}</strong>
+  &middot; <a href="/viewMeeting/{{ c.case.meeting.id }}">{{ c.case.meeting.date|date:"Y-m-d" }}</a>
+  {% if not redact_names and c.person %}
+    &middot; <a href="/viewPersonHistory/{{ c.person.id }}">{{ c.person.display_name|default:c.person.first_name }}</a>
+  {% elif c.person %}
+    &middot; {{ c.person.display_name|default:c.person.first_name }}
+  {% endif %}
+  {% if c.rule %}
+    &middot; <a href="/viewRuleHistory/{{ c.rule.id }}">{{ c.rule.number }} {{ c.rule.title }}</a>
+  {% endif %}
+  {% if c.severity %}({{ c.severity }}){% endif %}
+  <br>
+  {{ c.case.findings }}
+  {% if c.referred_to_sm and c.sm_decision %}<br><b>SM decision:</b> {{ c.sm_decision }}{% endif %}
+</div>

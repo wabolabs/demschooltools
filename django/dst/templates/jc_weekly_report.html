@@ -1,0 +1,53 @@
+<h3>Weekly report</h3>
+<p>Period from {{ start_date|date:"l, M j, Y" }} to {{ end_date|date:"l, M j, Y" }}</p>
+<p><a href="/thisWeekReport">Current week</a></p>
+<p>{{ num_cases }} cases, {{ num_charges }} charges</p>
+
+<div class="row">
+  <div class="col-sm-4">
+    <h4>Charges per rule</h4>
+    <table class="table sortable">
+      <tr><th>Rule<th>#</tr>
+      {% for rule, count in rule_counts %}
+        <tr><td><a href="/viewRuleHistory/{{ rule.id }}">{{ rule.number }} {{ rule.title }}</a><td>{{ count }}</tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="col-sm-4">
+    <h4>Charges per person</h4>
+    <table class="table sortable">
+      <tr><th>Person<th>Week<th>Month<th>Year</tr>
+      {% for pc in person_counts %}
+        <tr>
+          <td><a href="/viewPersonHistory/{{ pc.person.id }}">{{ pc.person.display_name|default:pc.person.first_name }}</a></td>
+          <td>{{ pc.this_week }}</td>
+          <td>{{ pc.this_month }}</td>
+          <td>{{ pc.all_time }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="col-sm-4">
+    <h4>Uncharged people</h4>
+    <ol>
+    {% for p in uncharged_people %}
+      <li><a href="/viewPersonHistory/{{ p.id }}">{{ p.display_name|default:p.first_name }}</a></li>
+    {% endfor %}
+    </ol>
+  </div>
+</div>
+
+<h4>Cases with no charges</h4>
+<table class="table">
+{% for c in cases %}
+  {% if not c.charge_set.exists %}
+  <tr>
+    <td><strong>#{{ c.case_number }}</strong></td>
+    <td>{{ c.date|date:"Y-m-d" }} &middot; {{ c.location }}</td>
+    <td>{{ c.findings|truncatewords:30 }}</td>
+  </tr>
+  {% endif %}
+{% empty %}
+  <tr><td colspan="3"><em>No cases.</em></td></tr>
+{% endfor %}
+</table>

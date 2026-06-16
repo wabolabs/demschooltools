@@ -1,0 +1,19 @@
+<h3>Cases written by {{ person.first_name }} {{ person.last_name }}</h3>
+
+<table class="table">
+{% for c in cases %}
+  <tr>
+    <td><strong>#{{ c.case_number }}</strong></td>
+    <td>
+      {% if c.location %}{{ c.location }} &middot; {% endif %}
+      {{ c.date|date:"Y-m-d" }}
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>{{ c.findings|linebreaks }}</td>
+  </tr>
+{% empty %}
+  <tr><td colspan="2"><em>No cases written this year.</em></td></tr>
+{% endfor %}
+</table>

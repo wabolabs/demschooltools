@@ -1,0 +1,61 @@
+<h3>{{ person.first_name }} {{ person.last_name }}'s {{ org_config.str_jc_name_short }} history</h3>
+<p>{{ history.start_date|date:"Y-m-d" }} to {{ history.end_date|date:"Y-m-d" }}</p>
+
+<h4>Recent {{ org_config.str_res_plans }}</h4>
+{% if recent_rps %}
+<table class="table">
+<thead><tr><th>Day{% if org_config.show_entry %}<th width=45%>Entry{% endif %}<th width=45%>{{ org_config.str_res_plan_cap }}</tr></thead>
+<tbody>
+{% for c in recent_rps %}
+<tr>
+  <td>{{ c.case.meeting.date|date:"D" }}</td>
+  {% if org_config.show_entry %}<td>{% if c.rule %}{{ c.rule.number }} {{ c.rule.title }}{% endif %}</td>{% endif %}
+  <td>{{ c.resolution_plan }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p>None.</p>
+{% endif %}
+
+{% if org_config.show_entry %}
+<h4>Rule violation counts</h4>
+<table class="table sortable">
+<thead><tr><th width=50%>Entry<th width=25%>Most Recent<th>#</tr></thead>
+<tbody>
+{% for r in history.rule_records %}
+<tr>
+  <td>{% if r.entry %}{{ r.entry.number }} {{ r.entry.title }}{% else %}<i>unknown</i>{% endif %}</td>
+  <td>{{ r.most_recent|date:"Y-m-d" }}</td>
+  <td align=right>{{ r.count }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+<h4>Case details</h4>
+<p><a href="/viewPersonHistory/{{ person.id }}?redact_names={% if redact_names %}false{% else %}true{% endif %}">
+{% if redact_names %}View with names{% else %}Remove names{% endif %}</a></p>
+
+<div class="tab-content">
+{% if org_config.show_entry %}
+  <div class="tab-pane active" id="byrule">
+    {% for rule_id, clist in history.charges_by_rule.items %}
+      {% with first_charge=clist|first %}
+        <h4 style="margin-top: 2em;">{% if first_charge.rule %}{{ first_charge.rule.number }} {{ first_charge.rule.title }}{% else %}<i>No rule</i>{% endif %}</h4>
+      {% endwith %}
+      {% for c in clist %}
+        {% include "history_charge.html" %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+{% endif %}
+  <div class="tab-pane" id="bydate">
+    <p>&nbsp;</p>
+    {% for c in history.charges_by_date %}
+      {% include "history_charge.html" %}
+    {% endfor %}
+  </div>
+</div>

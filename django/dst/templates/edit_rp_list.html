@@ -1,0 +1,53 @@
+<h3>{{ org_config.str_res_plans_cap }}</h3>
+<p><a href="/viewManual" class="btn btn-default">View Manual (Rules)</a></p>
+
+<h4>Active {{ org_config.str_res_plans }}</h4>
+<table class="table">
+<thead><tr><th>Person<th>Case<th>Entry<th>{{ org_config.str_res_plan_cap }}<th>Date</tr></thead>
+<tbody>
+{% for c in active_rps %}
+<tr>
+  <td>{% if c.person %}<a href="/viewPersonHistory/{{ c.person.id }}">{{ c.person.display_name|default:c.person.first_name }}{% endif %}</td>
+  <td>#{{ c.case.case_number }}</td>
+  <td>{% if c.rule %}{{ c.rule.number }} {{ c.rule.title }}{% endif %}</td>
+  <td>{{ c.resolution_plan }}</td>
+  <td>{{ c.case.meeting.date|date:"Y-m-d" }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="5"><em>No active {{ org_config.str_res_plans }}.</em></td></tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h4>Recently completed {{ org_config.str_res_plans }}</h4>
+<table class="table">
+<thead><tr><th>Person<th>Case<th>{{ org_config.str_res_plan_cap }}<th>Completed</tr></thead>
+<tbody>
+{% for c in completed_rps %}
+<tr>
+  <td>{% if c.person %}{{ c.person.display_name|default:c.person.first_name }}{% endif %}</td>
+  <td>#{{ c.case.case_number }}</td>
+  <td>{{ c.resolution_plan }}</td>
+  <td>{{ c.rp_complete_date|date:"Y-m-d" }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="4"><em>No recently completed {{ org_config.str_res_plans }}.</em></td></tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h4>Nullified {{ org_config.str_res_plans }}</h4>
+<table class="table">
+<thead><tr><th>Person<th>Case<th>{{ org_config.str_res_plan_cap }}</tr></thead>
+<tbody>
+{% for c in nullified_rps %}
+<tr>
+  <td>{% if c.person %}{{ c.person.display_name|default:c.person.first_name }}{% endif %}</td>
+  <td>#{{ c.case.case_number }}</td>
+  <td>{{ c.resolution_plan }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="3"><em>No nullified {{ org_config.str_res_plans }}.</em></td></tr>
+{% endfor %}
+</tbody>
+</table>

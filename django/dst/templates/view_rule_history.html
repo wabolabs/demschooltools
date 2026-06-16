@@ -1,0 +1,33 @@
+<h3>{{ rule.number }} {{ rule.title }}</h3>
+<p>{{ history.start_date|date:"Y-m-d" }} to {{ history.end_date|date:"Y-m-d" }}</p>
+
+<div class="should-limit"><b>Rule text:</b> {{ rule.content|linebreaks }}</div>
+
+<h4>Recent {{ org_config.str_res_plans }}</h4>
+{% if recent_rps %}
+<ul>
+{% for rp in recent_rps %}
+  <li>{{ rp }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>None.</p>
+{% endif %}
+
+<table class="table sortable">
+<thead><tr><th width=50%>Person<th width=25%>Most Recent<th>#</tr></thead>
+<tbody>
+{% for r in history.rule_records %}
+<tr>
+  <td>{% if r.person %}{{ r.person.display_name|default:r.person.first_name }}{% else %}<i>unknown</i>{% endif %}</td>
+  <td>{{ r.most_recent|date:"Y-m-d" }}</td>
+  <td align=right>{{ r.count }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<hr>
+{% for c in history.charges %}
+  {% include "history_charge.html" %}
+{% endfor %}

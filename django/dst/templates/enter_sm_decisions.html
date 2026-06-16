@@ -1,0 +1,31 @@
+<h3>Record School Meeting decisions</h3>
+
+{% if sm_charges %}
+<form method="POST">
+  {% csrf_token %}
+  {% for c in sm_charges %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <strong>Case #{{ c.case.case_number }}</strong> &middot; {{ c.person.display_name|default:c.person.first_name }}
+        {% if c.rule %} &middot; {{ c.rule.number }} {{ c.rule.title }}{% endif %}
+      </div>
+      <div class="panel-body">
+        <p><b>{{ org_config.str_res_plan_cap }}:</b> {{ c.resolution_plan }}</p>
+        <p><b>Plea:</b> {{ c.plea }}</p>
+        <p><b>Findings:</b> {{ c.case.findings|linebreaks }}</p>
+        <div class="form-group">
+          <label for="sm_decision_{{ c.id }}">School Meeting decision</label>
+          <textarea name="sm_decision_{{ c.id }}" id="sm_decision_{{ c.id }}" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="sm_date_{{ c.id }}">Date</label>
+          <input type="date" name="sm_date_{{ c.id }}" id="sm_date_{{ c.id }}" class="form-control" value="{% now "Y-m-d" %}">
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+  <input type="submit" class="btn btn-primary" value="Save all decisions">
+</form>
+{% else %}
+<p>No charges awaiting a decision from School Meeting.</p>
+{% endif %}
