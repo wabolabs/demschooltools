@@ -29,6 +29,13 @@ from custodia.models import (
     Swipe,
     Year,
 )
+from custodia.serializers import (
+    IsAdminResponseSerializer,
+    ReportStudentSerializer,
+    ReportYearsResponseSerializer,
+    StudentDetailResponseSerializer,
+    StudentsTodayResponseSerializer,
+)
 from dst.models import AttendanceDay, AttendanceWeek, Person, User, UserRole
 
 DEFAULT_REQUIRED_MINUTES = 345
@@ -270,8 +277,8 @@ class IsAdminView(APIView):
     def get(self, request: Request) -> Response:
         org: Organization = request.org
         user: User = request.user
-        return Response(
-            {
+        serializer = IsAdminResponseSerializer(
+            instance={
                 "admin": "overseer.roles/admin" if is_custodia_admin(user) else None,
                 "school": {
                     "_id": org.id,
@@ -280,6 +287,7 @@ class IsAdminView(APIView):
                 },
             }
         )
+        return Response(serializer.data)
 
 
 def format_date(dt: date) -> str:
@@ -298,8 +306,6 @@ class StudentsTodayView(APIView):
         org = request.org
         today = timezone.localdate()
 
-        student_infos = []
-
         people = list(
             Person.objects.filter(
                 tags__show_in_attendance=True,
@@ -310,8 +316,6 @@ class StudentsTodayView(APIView):
         person_to_max_swipe: dict[int, Swipe] = {}
         for swipe in Swipe.objects.filter(
             person__in=people,
-            # We will only try to fill in missing swipes if the missing swipe
-            # happened in the last 10 days.
             swipe_day__gt=today - timedelta(days=10),
         ):
             if (
@@ -340,23 +344,22 @@ class StudentsTodayView(APIView):
             if person_id not in student_to_in_time:
                 student_to_in_time[person_id] = in_time
 
+        student_summaries = []
         for person in people:
             last_swipe = person_to_max_swipe.get(person.id)
-            student_infos.append(
-                student_to_dict(
-                    person,
-                    org,
-                    last_swipe,
-                    student_to_in_time.get(person.id),
-                    person.id not in student_ids,
-                )
+            summary = student_to_dict(
+                person,
+                org,
+                last_swipe,
+                student_to_in_time.get(person.id),
+                person.id not in student_ids,
             )
+            student_summaries.append(summary)
 
-        return Response(
-            {
-                "students": student_infos,
-            }
+        serializer = StudentsTodayResponseSerializer(
+            instance={"students": student_summaries}
         )
+        return Response(serializer.data)
 
 
 def get_start_of_school_year() -> datetime:
@@ -416,18 +419,14 @@ def get_school_days(org: Organization, start: datetime, end: datetime) -> list[d
 def student_data_view(
     person_id: int, org: Organization, year: Year | None = None
 ) -> Response:
-    return Response(
-        {
-            "student": get_student_batch_data(
-                Person.objects.filter(id=person_id, organization=org),
-                year,
-                org,
-                # Pass include_all=True so that in case this student has no swipes, they are
-                # still included in the output.
-                include_all=True,
-            )[person_id]
-        }
-    )
+    data = get_student_batch_data(
+        Person.objects.filter(id=person_id, organization=org),
+        year,
+        org,
+        include_all=True,
+    )[person_id]
+    serializer = StudentDetailResponseSerializer(instance={"student": data})
+    return Response(serializer.data)
 
 
 def get_student_batch_data(
@@ -630,12 +629,10 @@ class ReportYears(APIView):
             year = self.create_year(org, from_date, date(from_date.year + 1, 8, 1))
             current_year = year.name
 
-        return Response(
-            {
-                "years": years,
-                "current_year": current_year,
-            }
+        serializer = ReportYearsResponseSerializer(
+            instance={"years": years, "current_year": current_year}
         )
+        return Response(serializer.data)
 
     def create_year(self, org: Organization, from_date: date, to_date: date) -> Year:
         to_time = timezone.make_aware(
@@ -730,4 +727,5 @@ class ReportView(APIView):
 
         student_info.sort(key=lambda x: x["name"])
 
-        return Response(student_info)
+        serializer = ReportStudentSerializer(student_info, many=True)
+        return Response(serializer.data)
