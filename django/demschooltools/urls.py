@@ -63,31 +63,25 @@ class NegativeIntConverter:
 register_converter(NegativeIntConverter, "negint")
 
 
+custodia_api_patterns = [
+    path("users/is-admin", IsAdminView.as_view()),
+    path("students", StudentsTodayView.as_view()),
+    path("students/<int:person_id>/swipe/delete", DeleteSwipeView.as_view()),
+    path("students/<int:person_id>/swipe", SwipeView.as_view()),
+    path("students/<int:person_id>/absent", AbsentView.as_view()),
+    path("students/<int:person_id>/excuse", ExcuseView.as_view()),
+    path("students/<int:person_id>/override", OverrideView.as_view()),
+    path("students/<int:person_id>", StudentDataView.as_view()),
+    path("reports/years/<str:year_name>", ReportYears.as_view()),
+    path("reports/years", ReportYears.as_view()),
+    path("reports/<str:year_name>/<negint:class_id>", ReportView.as_view()),
+    path("reports/<str:year_name>", ReportView.as_view()),
+]
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "custodia-api/",
-        (
-            [
-                path("users/is-admin", IsAdminView.as_view()),
-                path("students", StudentsTodayView.as_view()),
-                path(
-                    "students/<int:person_id>/swipe/delete", DeleteSwipeView.as_view()
-                ),
-                path("students/<int:person_id>/swipe", SwipeView.as_view()),
-                path("students/<int:person_id>/absent", AbsentView.as_view()),
-                path("students/<int:person_id>/excuse", ExcuseView.as_view()),
-                path("students/<int:person_id>/override", OverrideView.as_view()),
-                path("students/<int:person_id>", StudentDataView.as_view()),
-                path("reports/years/<str:year_name>", ReportYears.as_view()),
-                path("reports/years", ReportYears.as_view()),
-                path("reports/<str:year_name>/<int:class_id>", ReportView.as_view()),
-                path("reports/<str:year_name>", ReportView.as_view()),
-            ],
-            "custodia-api",
-            "custodia-api",
-        ),
-    ),
+    path("custodia-api/", (custodia_api_patterns, "custodia-api", "custodia-api")),
+    path("api/v1/custodia/", (custodia_api_patterns, "api-v1-custodia", "api-v1-custodia")),
     path("attendance/signInSheet", SignInSheetView.as_view()),
     path("viewManual", view_manual),
     path("viewManualChanges", view_manual_changes),

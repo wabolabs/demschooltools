@@ -168,3 +168,60 @@ class YearModelTests(TestCase):
         )
         self.assertEqual(year.name, "2024-2025")
         self.assertIsNotNone(year.inserted_date)
+
+
+class LoginViewTests(TestCase):
+    def setUp(self):
+        self.org = create_test_org()
+        self.user = User.objects.create(
+            email="admin@test.com",
+            username="admin@test.com",
+            name="Admin User",
+            organization=self.org,
+            is_staff=True,
+        )
+        self.user.set_password("testpass123")
+        self.user.save()
+
+    def test_login_success(self):
+        response = self.client.post(
+            "/custodia/login",
+            {"username": "admin@test.com", "password": "testpass123"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("PLAY_SESSION", response.cookies)
+        self.assertNotEqual(response.cookies["PLAY_SESSION"].value, "")
+
+    def test_login_wrong_password(self):
+        response = self.client.post(
+            "/custodia/login",
+            {"username": "admin@test.com", "password": "wrongpass"},
+        )
+        self.assertEqual(response.status_code, 302)
+        login_url = response.url or ""
+        self.assertIn("login", login_url)
+
+    def test_login_nonexistent_user(self):
+        response = self.client.post(
+            "/custodia/login",
+            {"username": "nobody@test.com", "password": "testpass123"},
+        )
+        self.assertEqual(response.status_code, 302)
+        login_url = response.url or ""
+        self.assertIn("login", login_url)
+
+    def test_login_inactive_user(self):
+        self.user.is_active = False
+        self.user.save()
+        response = self.client.post(
+            "/custodia/login",
+            {"username": "admin@test.com", "password": "testpass123"},
+        )
+        self.assertEqual(response.status_code, 302)
+        login_url = response.url or ""
+        self.assertIn("login", login_url)
+
+    def test_login_get_renders_form(self):
+        response = self.client.get("/custodia/login")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "login.html")
