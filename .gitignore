@@ -1,38 +1,28 @@
-syntax:glob
-
-logs
-project/target
-target
-dist
-
-.bsp/
-.idea/workspace.xml
-
-# JS stuff
-node_modules/
-app/assets/javascripts/gen
-app/assets/checkin/app.html
-.eslintcache
-npm-debug.log
-
-*~
-conf/generated.keystore
-conf/evolutions
-
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.ruff_cache/
 
-# Mac stuff
+# Django
+django/static-vite/
+django/staticfiles/
+django/.env
+
+# Node
+node_modules/
+react/node_modules/
+react/dist/
+
+# OS
 .DS_Store
+*.swp
+*.swo
 
-# Metals stuff
-.metals/
-.bloop/
-.ammonite/
-metals.sbt
+# IDE
+.idea/
+*.sublime-*
 
-# Eclipse stuff
-.settings/
-.classpath
-.project
-
-react/stats.html
+# Environment
+.env

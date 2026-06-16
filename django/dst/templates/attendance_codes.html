@@ -1,0 +1,53 @@
+<h3>Absence codes</h3>
+
+{% if codes %}
+<ul>
+{% for c in codes %}
+  <li><span style="background:{{ c.color }};">&nbsp;{{ c.code }} &mdash; {{ c.description }}</span>
+    {% if c.counts_toward_attendance %} <span class="label label-info">Counts</span>{% endif %}
+    {% if c.not_counted %} <span class="label label-warning">Not counted</span>{% endif %}
+  </li>
+{% endfor %}
+</ul>
+{% else %}
+<p><em>No absence codes defined.</em></p>
+{% endif %}
+
+<hr>
+<h4>Create a new code</h4>
+<form method="POST" class="form-horizontal">
+  {% csrf_token %}
+  <div class="form-group">
+    <label class="col-sm-1 control-label">Code</label>
+    <div class="col-sm-3">
+      <input type="text" name="code" class="form-control" placeholder="e.g. SICK">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-1 control-label">Description</label>
+    <div class="col-sm-5">
+      <input type="text" name="description" class="form-control" placeholder="e.g. Sick day">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-1 control-label">Color</label>
+    <div class="col-sm-2">
+      <input type="color" name="color" class="form-control" value="#cccccc">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-1 col-sm-5">
+      <div class="checkbox">
+        <label><input type="checkbox" name="counts_toward_attendance"> Counts toward attendance rate</label>
+      </div>
+      <div class="checkbox">
+        <label><input type="checkbox" name="not_counted"> Neither counts toward nor against attendance rate</label>
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-1 col-sm-5">
+      <input type="submit" class="btn btn-primary" value="Create">
+    </div>
+  </div>
+</form>

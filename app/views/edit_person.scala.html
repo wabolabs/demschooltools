@@ -1,8 +1,0 @@
-@(personForm: Form[Person])(implicit request: play.mvc.Http.Request, messages: play.i18n.Messages)
-
-@main("Editing person", "crm") {
-
-    @person_form(personForm,
-		routes.CRM.savePersonEdits(),
-		"Save")
-}

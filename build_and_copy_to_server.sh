@@ -13,12 +13,6 @@ trap 'cleanup $LINENO' ERR
 # Make sure that there are no uncommitted changes
 git diff-index --quiet HEAD --
 
-### Play Framework stuff
-npm install
-./sbt.sh clean dist
-rsync -v -h --progress target/universal/demschooltools-1.1.zip "$REMOTE_HOST:$REMOTE_DIR/"
-
-
 ## React & Django stuff
 (cd react && npm install && npm run build)
 
@@ -49,7 +43,4 @@ echo "  ./run_django.sh  # gracefully restarts gunicorn"
 echo ""
 echo "  # 2. Verify health"
 echo "  curl -f http://localhost:8000/health/ && echo 'Django OK'"
-echo ""
-echo "  # 3. Deploy Play (if needed)"
-echo "  unzip -o demschooltools-1.1.zip -d /www/demschooltools/"
-echo "  ./run_play.sh"
+
