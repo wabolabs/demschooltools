@@ -1,0 +1,12 @@
+<h2>{% if is_new %}Add a new person{% else %}Edit {{ person.first_name }} {{ person.last_name }}{% endif %}</h2>
+
+<form method="POST" class="form-horizontal">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <input type="submit" class="btn btn-primary" value="{% if is_new %}Create{% else %}Save{% endif %}">
+  {% if not is_new %}
+    <a href="/people/{{ person.id }}" class="btn btn-default">Cancel</a>
+  {% endif %}
+</form>

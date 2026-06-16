@@ -1,0 +1,85 @@
+{% if family_person %}
+  <p class="center">
+    <span class="family-id">Family ID #{{ family_person.id }}</span>
+    {% if family_person.first_name %}
+      <span class="family-name">{{ family_person.first_name }}</span>
+    {% endif %}
+    <span class="edit"><a href="/people/edit/{{ family_person.id }}">Edit</a></span>
+  </p>
+{% endif %}
+
+<div class="row">
+  <div class="col-xs-12 col-md-6">
+    <div class="person primary">
+      {% if person.gender == "Male" %}<div class="male">M</div>{% endif %}
+      {% if person.gender == "Female" %}<div class="female">F</div>{% endif %}
+      {% if person.gender == "Other" %}<div class="other_gender">O</div>{% endif %}
+
+      <h4>{{ person.first_name }} {{ person.last_name }}{% if person.display_name %} ("{{ person.display_name }}"){% endif %}</h4>
+
+      {% if person.notes %}<p>{{ person.notes }}</p>{% endif %}
+
+      <div id="person_tags_{{ person.id }}">
+        {% for t in person.tags.all %}
+          <span class="label label-default">{{ t.title }}</span>
+        {% endfor %}
+      </div>
+      <br>
+
+      {% if person.email %}<a href="mailto:{{ person.email }}">{{ person.email }}</a><br>{% endif %}
+      {% for number in person.phonenumber_set.all %}
+        {{ number.number }}{% if number.comment %} ({{ number.comment }}){% endif %}<br>
+      {% endfor %}
+
+      {% if person.address %}
+        {{ person.address }}<br>
+        {{ person.city }}, {{ person.state }} {{ person.zip }}<br>
+      {% elif person.neighborhood %}
+        'hood: {{ person.neighborhood }}<br>
+      {% endif %}
+
+      {% if person.previous_school or person.school_district %}
+        <br>
+      {% endif %}
+      {% if person.previous_school %}
+        <b>Previous School:</b> {{ person.previous_school }}<br>
+      {% endif %}
+      {% if person.school_district %}
+        <b>District:</b> {{ person.school_district }}<br>
+      {% endif %}
+
+      {% if person.grade %}<br>Grade {{ person.grade }}<br>{% endif %}
+      <a href="/people/edit/{{ person.id }}">Edit</a>
+    </div>
+  </div>
+
+  {% for fm in family_members %}
+    <div class="col-xs-12 col-md-3">
+      <div class="person">
+        {% if fm.gender == "Male" %}<div class="male">M</div>{% endif %}
+        {% if fm.gender == "Female" %}<div class="female">F</div>{% endif %}
+        {% if fm.gender == "Other" %}<div class="other_gender">O</div>{% endif %}
+        <h4><a href="/people/{{ fm.id }}">{{ fm.first_name }} {{ fm.last_name }}</a></h4>
+        {% if fm.email %}<a href="mailto:{{ fm.email }}">{{ fm.email }}</a><br>{% endif %}
+        <a href="/people/edit/{{ fm.id }}">Edit</a>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<hr>
+
+<h4>Comments</h4>
+<div class="row">
+  <div class="col-md-9" id="comments">
+    {% for c in all_comments %}
+      <div class="comment">
+        <p><strong>{{ c.user.name }}</strong> &middot; {{ c.created|date:"M j, Y g:i A" }}</p>
+        <p>{{ c.message|linebreaks }}</p>
+      </div>
+      {% if not forloop.last %}<hr>{% endif %}
+    {% empty %}
+      <p><em>No comments.</em></p>
+    {% endfor %}
+  </div>
+</div>

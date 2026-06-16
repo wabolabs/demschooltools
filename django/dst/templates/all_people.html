@@ -1,0 +1,23 @@
+<h3>All people</h3>
+<p>{{ people|length }} people</p>
+
+<table class="table sortable">
+  <tr>
+    <th width="150">Name</th>
+    <th>Email</th>
+    <th width="150">Phone</th>
+    <th>Notes</th>
+  </tr>
+  {% for p in people %}
+    <tr>
+      <td><a href="/people/{{ p.id }}">{{ p.first_name }} {{ p.last_name }}</a></td>
+      <td>{{ p.email }}</td>
+      <td>
+        {% for num in p.phonenumber_set.all %}
+          {{ num.number }}{% if num.comment %} ({{ num.comment }}){% endif %}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </td>
+      <td>{{ p.notes }}</td>
+    </tr>
+  {% endfor %}
+</table>

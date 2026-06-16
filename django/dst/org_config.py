@@ -57,7 +57,7 @@ class OrgConfig:
         # As of the Custodia -> DST merger, this value is now stored in the
         # Organization model. Be sure that the database is up to date with
         # these values.
-        self.time_zone = ZoneInfo("US/Eastern")
+        self.time_zone = ZoneInfo("America/New_York")
 
     def get_referral_destination(self, charge) -> str:
         return "School Meeting"
@@ -182,7 +182,7 @@ class MakariosLearningCommunity(OrgConfig):
     def __init__(self):
         super().__init__("Makarios Learning Community")
         self.people_url = "https://mlc.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Central")
+        self.time_zone = ZoneInfo("America/Chicago")
 
         self.str_manual_title = "Management Manual"
         self.str_manual_title_short = "Mgmt. Man."
@@ -198,7 +198,7 @@ class TheOpenSchool(OrgConfig):
     def __init__(self):
         super().__init__("The Open School")
         self.people_url = "https://tos.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Pacific")
+        self.time_zone = ZoneInfo("America/Los_Angeles")
 
         self.str_manual_title = "Law Book"
         self.str_manual_title_short = "Law Book"
@@ -224,7 +224,7 @@ class TheOpenSchoolVirtual(OrgConfig):
     def __init__(self):
         super().__init__("The Open School Virtual")
         self.people_url = "https://tosv.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Pacific")
+        self.time_zone = ZoneInfo("America/Los_Angeles")
 
         self.str_manual_title = "Law Book"
         self.str_manual_title_short = "Law Book"
@@ -250,7 +250,7 @@ class Houston(OrgConfig):
     def __init__(self):
         super().__init__("Houston Sudbury School")
         self.people_url = "https://hss.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Central")
+        self.time_zone = ZoneInfo("America/Chicago")
 
         self.str_manual_title = "Lawbook"
         self.str_manual_title_short = "Lawbook"
@@ -269,7 +269,7 @@ class Sandbox(OrgConfig):
     def __init__(self):
         super().__init__("DemSchoolTools sandbox area")
         self.people_url = "https://sandbox.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Eastern")
+        self.time_zone = ZoneInfo("America/New_York")
 
         self.str_manual_title = "Lawbook"
         self.str_manual_title_short = "Lawbook"
@@ -288,7 +288,7 @@ class Clearview(OrgConfig):
     def __init__(self):
         super().__init__("Clearview Sudbury School")
         self.people_url = "https://css.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Central")
+        self.time_zone = ZoneInfo("America/Chicago")
 
         self.str_manual_title = "Rulebook"
         self.str_manual_title_short = "Rulebook"
@@ -329,7 +329,7 @@ class Tallgrass(OrgConfig):
     def __init__(self):
         super().__init__("Tallgrass Sudbury School")
         self.people_url = "https://tallgrass.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Central")
+        self.time_zone = ZoneInfo("America/Chicago")
 
         self.str_manual_title = "Lawbook"
         self.str_manual_title_short = "Lawbook"
@@ -352,7 +352,7 @@ class MiamiSudburySchool(OrgConfig):
     def __init__(self):
         super().__init__("Miami Sudbury School")
         self.people_url = "https://miami.demschooltools.com"
-        self.time_zone = ZoneInfo("US/Eastern")
+        self.time_zone = ZoneInfo("America/New_York")
 
         self.str_manual_title = "Lawbook"
         self.str_manual_title_short = "Lawbook"

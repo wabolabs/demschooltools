@@ -1,0 +1,25 @@
+<h3>Recent Comments</h3>
+
+<div class="row">
+  <div class="span4">
+    <ul>
+      {% for person in people %}
+        <li><a href="/people/{{ person.id }}">{{ person.first_name }} {{ person.last_name }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="span6">
+    {% for c in recent_comments %}
+      <div class="comment">
+        <p><strong><a href="/people/{{ c.person.id }}">{{ c.person.first_name }} {{ c.person.last_name }}</a></strong>
+          <span class="text-muted">by {{ c.user.name }} &middot; {{ c.created|date:"M j, Y g:i A" }}</span>
+        </p>
+        <p>{{ c.message|linebreaks }}</p>
+      </div>
+      {% if not forloop.last %}<hr>{% endif %}
+    {% empty %}
+      <p><em>No recent comments.</em></p>
+    {% endfor %}
+  </div>
+</div>

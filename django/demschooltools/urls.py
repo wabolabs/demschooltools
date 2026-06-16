@@ -48,6 +48,13 @@ from dst.manual_views import (
     view_manual,
     view_manual_changes,
 )
+from dst.people_views import (
+    add_person,
+    all_people,
+    edit_person,
+    people_index,
+    person_detail,
+)
 
 
 class NegativeIntConverter:
@@ -109,6 +116,12 @@ urlpatterns = [
     path("custodia/login", LoginView.as_view()),
     path("custodia/logout", LogoutView.as_view()),
     path("health/", health),
+    path("people", people_index),
+    path("people/", people_index),
+    path("allPeople", all_people),
+    path("people/new", add_person),
+    path("people/<int:person_id>", person_detail),
+    path("people/edit/<int:person_id>", edit_person),
 ]
 
 if settings.SILK_ENABLED:
