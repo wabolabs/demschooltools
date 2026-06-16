@@ -100,7 +100,7 @@
                             {% endif %}
                         </li>
                         <li {% if menu == "account" %}class="username active"{% else %}class="username"{% endif %}><a {% if is_user_logged_in %}
-                                                                                                                      href="/settings/password"
+                                                                                                                       href="/settings/password"
                                                                                                                   {% endif %} class="username">{{ username }}</a></li>
                     </ul>
 
@@ -108,7 +108,7 @@
                         <div class="tab-pane {% if menu == "crm" %}active{% endif %}" id="people">
                             <div class="subnav">
                                 <a {% if selectedBtn == "recent_comments" %}class="active"{% endif %}
-                                   href="/people">
+                                   href="/people/">
                                     Recent comments</a>
                                 <a {% if selectedBtn == "all_people" %}class="active"{% endif %}
                                    href="/allPeople">
@@ -286,12 +286,12 @@
                             <div class="tab-pane active" id="settings">
                                 <div class="subnav">
                                     <a {% if selectedBtn == "settings" %}class="active"{% endif %}
-                                       href="/settings">Settings</a>
+                                       href="/settings/">Settings</a>
                                     <a {% if selectedBtn == "settings_checklists" %}class="active"{% endif %}
                                        href="/settings/checklists">Checklists</a>
                                     <a {% if selectedBtn == "settings_access" %}class="active"{% endif %}
                                        href="/settings/access">Users & Access</a>
-                                    <a href="/settings/password">Change Password</a>
+                                     <a href="/settings/password">Change Password</a>
                                 </div>
                             </div>
                         {% endif %}
