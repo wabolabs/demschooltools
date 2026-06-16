@@ -35,6 +35,7 @@ from custodia.views import (
     SwipeView,
 )
 from dst.attendance_views import SignInSheetView
+from dst.health_views import health
 from dst.manual_views import (
     CreateUpdateChapter,
     CreateUpdateEntry,
@@ -113,6 +114,7 @@ urlpatterns = [
     path("custodia/error-test", ErrorTestView.as_view()),
     path("custodia/login", LoginView.as_view()),
     path("custodia/logout", LogoutView.as_view()),
+    path("health/", health),
 ]
 
 if settings.SILK_ENABLED:

@@ -76,7 +76,7 @@ def get_user_for_play_session(request) -> User | None:
     try:
         data = jwt.decode(raw_token, settings.APPLICATION_SECRET, algorithms=["HS256"])
     except Exception as e:
-        print(e)
+        LOGGER.warning("Failed to decode PLAY_SESSION JWT: %s", e)
         return None
 
     LOGGER.debug(f"Decoded JWT {data=}")

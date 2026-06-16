@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DJANGO_VITE = {"default": {"dev_mode": True, "dev_server_port": 8082}}
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-8*$0&(xq!3-)o0p%f@kusqqi1^02knn!3c8t)+n&z*cs_89cf*"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-key-do-not-use-in-prod")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -113,7 +113,7 @@ WSGI_APPLICATION = "demschooltools.wsgi.application"
 
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": True,
+    "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
             "format": "%(levelname)-5s [%(asctime)s] %(name)-20s: %(message)s",

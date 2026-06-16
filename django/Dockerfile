@@ -1,0 +1,30 @@
+# Stage 1: Build React frontend
+FROM node:22-alpine AS react-build
+WORKDIR /react
+COPY react/package.json react/package-lock.json ./
+RUN npm ci
+COPY react/ .
+RUN npm run build
+
+# Stage 2: Build Django backend
+FROM python:3.13-slim AS django-base
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY django/pyproject.toml django/uv.lock ./
+RUN pip install uv && uv sync --frozen --group prod
+
+COPY django/ .
+COPY --from=react-build /django/static-vite /app/static-vite
+
+RUN uv run manage.py collectstatic --noinput
+
+EXPOSE 8000
+
+ENV DJANGO_SETTINGS_MODULE=demschooltools.settings_prod
+ENV PYTHONUNBUFFERED=1
+
+CMD ["uv", "run", "--group", "prod", "gunicorn", "--bind", "0.0.0.0:8000", "--threads", "4", "--access-logfile", "-", "--error-logfile", "-", "demschooltools.wsgi"]

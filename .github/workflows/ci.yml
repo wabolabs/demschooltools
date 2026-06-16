@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  django-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+        working-directory: django
+      - run: uv run ruff check django
+        working-directory: django
+      - run: uv run manage.py makemigrations --check --dry-run
+        working-directory: django
+        env:
+          APPLICATION_SECRET: ci-check
+          DJANGO_SETTINGS_MODULE: demschooltools.settings_ci
+
+  django-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: school_crm
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+        working-directory: django
+      - run: uv run manage.py migrate
+        working-directory: django
+        env:
+          APPLICATION_SECRET: ci-test-secret
+          DST_DB_NAME: school_crm
+          DST_DB_USER: postgres
+          DST_DB_PASSWORD: postgres
+          DST_DB_HOST: localhost
+          DJANGO_SETTINGS_MODULE: demschooltools.settings_ci
+      - run: uv run manage.py test
+        working-directory: django
+        env:
+          APPLICATION_SECRET: ci-test-secret
+          DST_DB_NAME: school_crm
+          DST_DB_USER: postgres
+          DST_DB_PASSWORD: postgres
+          DST_DB_HOST: localhost
+          DJANGO_SETTINGS_MODULE: demschooltools.settings_ci
+
+  react-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: react
+      - run: npm run lint
+        working-directory: react
+
+  react-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: react
+      - run: npm run build
+        working-directory: react

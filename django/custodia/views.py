@@ -1,9 +1,11 @@
+import uuid
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 from typing import Type
 
-import requests
+import jwt
 from django.conf import settings
+from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout
 from django.contrib.auth.views import redirect_to_login
 from django.db.models import Model
@@ -53,31 +55,34 @@ class LoginView(View):
         return render(request, "login.html")
 
     def post(self, request: HttpRequest):
-        login_response = requests.post(
-            ("http://" if settings.DEBUG else "https://")
-            + request.get_host()
-            + "/login",
-            data={
-                "email": request.POST["username"],
-                "password": request.POST["password"],
+        email = request.POST.get("username", "")
+        password = request.POST.get("password", "")
+
+        try:
+            user: User = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return redirect_to_login("")
+
+        if not user.check_password(password) or not user.is_active:
+            return redirect_to_login("")
+
+        token = jwt.encode(
+            {
+                "data": {
+                    "pa.u.id": user.email,
+                    "pa.p.id": "evan-auth-provider",
+                    "pa.s.id": str(uuid.uuid4()),
+                },
             },
-            allow_redirects=False,
+            settings.APPLICATION_SECRET,
+            algorithm="HS256",
         )
 
-        if (
-            login_response.status_code == 303
-            and login_response.headers.get("Location") != "/login"
-        ):
-            # successful login
-            response = redirect("/custodia")
-            for cookie in login_response.cookies:
-                response.set_cookie(
-                    key=cookie.name,
-                    value=cookie.value,  # type: ignore
-                )
-                return response
+        auth_login(request, user)
 
-        return redirect_to_login("")
+        response = redirect("/custodia")
+        response.set_cookie("PLAY_SESSION", token)
+        return response
 
 
 class LogoutView(View):
