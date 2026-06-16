@@ -22,7 +22,7 @@ from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import include, path, register_converter
+from django.urls import include, path, re_path, register_converter
 
 from dst.models import Person, Tag
 from dst.org_config import get_org_config
@@ -71,6 +71,10 @@ def misc_file_sharing(request: DstHttpRequest):
         "File Sharing",
         selected_button="file_sharing",
     )
+
+
+def custodia_spa(request, **kwargs):
+    return IndexView.as_view()(request)
 
 
 from custodia.views import (
@@ -302,6 +306,8 @@ urlpatterns = [
     # Custodia routes
     path("custodia-admin", lambda r: redirect("/custodia/")),
     path("custodia/", IndexView.as_view()),
+    re_path(r"^custodia/students.*$", custodia_spa),
+    re_path(r"^custodia/reports.*$", custodia_spa),
     path("custodia/error-test", ErrorTestView.as_view()),
     path("custodia/login", LoginView.as_view()),
     path("custodia/logout", LogoutView.as_view()),

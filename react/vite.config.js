@@ -19,8 +19,6 @@ export default ({ command, mode }) =>
       emptyOutDir: true,
       rollupOptions: {
         input: {
-          custodia: resolve(__dirname, "custodia", "js", "app.jsx"),
-          custodia_css: resolve(__dirname, "custodia", "js", "cssonly.js"),
           reactapp:  resolve(__dirname, "index.jsx"),
         },
       },
