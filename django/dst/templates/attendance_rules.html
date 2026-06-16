@@ -1,0 +1,82 @@
+<h3>Attendance Rules</h3>
+<p><a href="/attendance/newRule" class="btn btn-primary">New Rule</a></p>
+
+{% if current_rules %}
+<h4 class="attendance-rules-category">Current Rules</h4>
+<table class="table sortable">
+<tr><th>Rule #<th>Category<th>Person<th>Start<th>End<th>Days<th>Code
+{% if org_config.org.attendance_enable_partial_days %}<th>Min Hrs<th>Latest<th>Earliest{% endif %}
+{% if org_config.org.attendance_report_late_fee %}<th>Exempt{% endif %}
+</tr>
+{% for a in current_rules %}
+{% with r=a.rule %}
+<tr>
+  <td><a href="/attendance/rule/{{ r.id }}">{{ r.id }}</a></td>
+  <td>{{ r.category|default:"" }}</td>
+  <td>{% if r.person %}{{ r.person.get_name }}{% else %}Everyone{% endif %}</td>
+  <td>{{ r.start_date|date:"Y-m-d" }}</td>
+  <td>{{ r.end_date|date:"Y-m-d"|default:"" }}</td>
+  <td>{% if r.monday %}M {% endif %}{% if r.tuesday %}T {% endif %}{% if r.wednesday %}W {% endif %}{% if r.thursday %}Th {% endif %}{% if r.friday %}F {% endif %}</td>
+  <td style="background:{{ a.code_color }}">{{ r.absence_code|default:"" }}</td>
+  {% if org_config.org.attendance_enable_partial_days %}
+  <td>{{ r.min_hours|default:"" }}</td>
+  <td>{{ r.latest_start_time|time:"H:i"|default:"" }}</td>
+  <td>{{ r.earliest_departure_time|time:"H:i"|default:"" }}</td>
+  {% endif %}
+  {% if org_config.org.attendance_report_late_fee %}
+  <td>{% if r.exempt_from_fees %}Yes{% endif %}</td>
+  {% endif %}
+</tr>
+{% endwith %}
+{% endfor %}
+</table>
+{% endif %}
+
+{% if future_rules %}
+<h4 class="attendance-rules-category">Future Rules</h4>
+<table class="table sortable">
+<tr><th>Rule #<th>Category<th>Person<th>Start<th>End<th>Days<th>Code
+{% if org_config.org.attendance_enable_partial_days %}<th>Min Hrs{% endif %}
+</tr>
+{% for a in future_rules %}
+{% with r=a.rule %}
+<tr>
+  <td><a href="/attendance/rule/{{ r.id }}">{{ r.id }}</a></td>
+  <td>{{ r.category|default:"" }}</td>
+  <td>{% if r.person %}{{ r.person.get_name }}{% else %}Everyone{% endif %}</td>
+  <td>{{ r.start_date|date:"Y-m-d" }}</td>
+  <td>{{ r.end_date|date:"Y-m-d"|default:"" }}</td>
+  <td>{% if r.monday %}M {% endif %}{% if r.tuesday %}T {% endif %}{% if r.wednesday %}W {% endif %}{% if r.thursday %}Th {% endif %}{% if r.friday %}F {% endif %}</td>
+  <td>{{ r.absence_code|default:"" }}</td>
+  {% if org_config.org.attendance_enable_partial_days %}
+  <td>{{ r.min_hours|default:"" }}</td>
+  {% endif %}
+</tr>
+{% endwith %}
+{% endfor %}
+</table>
+{% endif %}
+
+{% if past_rules %}
+<h4 class="attendance-rules-category">Past Rules</h4>
+<table class="table sortable">
+<tr><th>Rule #<th>Category<th>Person<th>Start<th>End<th>Days<th>Code</tr>
+{% for a in past_rules %}
+{% with r=a.rule %}
+<tr>
+  <td><a href="/attendance/rule/{{ r.id }}">{{ r.id }}</a></td>
+  <td>{{ r.category|default:"" }}</td>
+  <td>{% if r.person %}{{ r.person.get_name }}{% else %}Everyone{% endif %}</td>
+  <td>{{ r.start_date|date:"Y-m-d" }}</td>
+  <td>{{ r.end_date|date:"Y-m-d" }}</td>
+  <td>{% if r.monday %}M {% endif %}{% if r.tuesday %}T {% endif %}{% if r.wednesday %}W {% endif %}{% if r.thursday %}Th {% endif %}{% if r.friday %}F {% endif %}</td>
+  <td>{{ r.absence_code|default:"" }}</td>
+</tr>
+{% endwith %}
+{% endfor %}
+</table>
+{% endif %}
+
+{% if not current_rules and not future_rules and not past_rules %}
+<p><em>No attendance rules defined.</em></p>
+{% endif %}

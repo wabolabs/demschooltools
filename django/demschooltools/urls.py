@@ -40,7 +40,7 @@ from custodia.views import (
     StudentsTodayView,
     SwipeView,
 )
-from dst.attendance_views import SignInSheetView
+from dst.attendance_views import AttendanceCodesView, AttendanceRulesView, SignInSheetView
 from dst.health_views import health
 from dst.manual_views import (
     CreateUpdateChapter,
@@ -86,8 +86,13 @@ from dst.people_views import (
     edit_person,
     people_index,
     person_detail,
-    settings_view,
     all_tags,
+)
+from dst.settings_views import (
+    settings_access,
+    settings_index,
+    settings_password,
+    settings_view,
 )
 
 
@@ -178,20 +183,23 @@ urlpatterns = [
     path("health/", health),
     path("login", login_view),
     path("logout", LogoutView.as_view()),
-    path("attendance", SignInSheetView.as_view()),
-    path("attendance/", SignInSheetView.as_view()),
+    path("attendance", lambda r: redirect("/attendance/signInSheet")),
+    path("attendance/", lambda r: redirect("/attendance/signInSheet")),
     path("people", people_index),
     path("people/", people_index),
     path("allPeople", all_people),
     path("people/new", add_person),
     path("people/<int:person_id>", person_detail),
     path("people/edit/<int:person_id>", edit_person),
-    path("settings", settings_view),
-    path("settings/", settings_view),
-    path("settings/password", settings_view),
+    path("settings", settings_index),
+    path("settings/", settings_index),
+    path("settings/password", settings_password),
+    path("settings/access", settings_access),
+    path("settings/checklists", settings_view),
     path("viewAllTags", all_tags),
     path("roles/index", settings_view),
-    path("attendance/codes", settings_view),
+    path("attendance/codes", AttendanceCodesView.as_view()),
+    path("attendance/rules", AttendanceRulesView.as_view()),
 ]
 
 if settings.SILK_ENABLED:

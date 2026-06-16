@@ -1,0 +1,98 @@
+<h3>Users & Access</h3>
+
+<h4>Current users</h4>
+<table class="table" style="width: auto;">
+<thead><th>Name</th><th>Email</th>
+{% for role_key, role_label in all_roles %}
+  <th class="center" style="font-size:11px">{{ role_label }}</th>
+{% endfor %}
+<th></th></thead>
+{% for entry in active_users %}
+{% with u=entry.user %}
+<tr>
+  <td>{{ u.name }}</td>
+  <td>{{ u.email }}</td>
+  {% for role_key, role_label in all_roles %}
+    <td class="center">
+      <form method="POST" style="display:inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="toggle_role">
+        <input type="hidden" name="user_id" value="{{ u.id }}">
+        <input type="hidden" name="role" value="{{ role_key }}">
+        <button type="submit" style="background:none;border:none;cursor:pointer">
+          {% if role_key in entry.roles %}&#10003;{% else %}&#10007;{% endif %}
+        </button>
+      </form>
+    </td>
+  {% endfor %}
+  <td>
+    <form method="POST" style="display:inline">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_active">
+      <input type="hidden" name="user_id" value="{{ u.id }}">
+      <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('Deactivate this user?')">Deactivate</button>
+    </form>
+  </td>
+</tr>
+{% endwith %}
+{% endfor %}
+</table>
+
+<hr>
+
+<h4>IP-based read-only access</h4>
+<p>Access at the "View JC" level is available for all traffic from a particular IP address. Enter an IP address to allow below.</p>
+<form method="POST" class="form-inline">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="save_ip">
+  <input type="text" name="allowed_ip" class="form-control" placeholder="IP address" value="{% for ip in allowed_ips %}{{ ip.ip }}{% endfor %}">
+  <input type="submit" class="btn btn-primary" value="Save">
+</form>
+
+<hr>
+
+<h4>Add a new user</h4>
+<form method="POST" class="form-horizontal">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add_user">
+  <div class="form-group">
+    <label class="col-sm-1 control-label">Name</label>
+    <div class="col-sm-3">
+      <input type="text" name="name" class="form-control" required>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-1 control-label">Email</label>
+    <div class="col-sm-3">
+      <input type="email" name="email" class="form-control" required>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-1 col-sm-3">
+      <input type="submit" class="btn btn-primary" value="Add new user">
+    </div>
+  </div>
+</form>
+
+<hr>
+
+<h4>Inactive users</h4>
+<table class="table" style="width: 400px">
+<thead><th>Name</th><th>Email</th><th></th></thead>
+{% for entry in inactive_users %}
+{% with u=entry.user %}
+<tr>
+  <td>{{ u.name }}</td>
+  <td>{{ u.email }}</td>
+  <td>
+    <form method="POST" style="display:inline">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_active">
+      <input type="hidden" name="user_id" value="{{ u.id }}">
+      <button type="submit" class="btn btn-success btn-xs">Activate</button>
+    </form>
+  </td>
+</tr>
+{% endwith %}
+{% endfor %}
+</table>
