@@ -1,0 +1,14 @@
+<h3>Assign PINs</h3>
+<form method="POST" class="form-horizontal">
+  {% csrf_token %}
+  <table class="table attendance-pins-table">
+    <tr><th>Name</th><th>PIN</th></tr>
+    {% for p in people %}
+    <tr>
+      <td>{{ p.display_name|default:p.first_name }}</td>
+      <td><input type="text" name="pin_{{ p.id }}" class="form-control" style="width:120px" value="{{ p.pin }}"></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <input type="submit" class="btn btn-primary" value="Save PINs">
+</form>

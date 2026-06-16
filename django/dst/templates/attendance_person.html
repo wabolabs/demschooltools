@@ -1,0 +1,14 @@
+<h3>Attendance for {{ person.display_name|default:person.first_name }}</h3>
+<table class="table">
+<tr><th>Date<th>Start<th>End<th>Code</tr>
+{% for r in records %}
+<tr>
+  <td>{{ r.day|date:"Y-m-d" }}</td>
+  <td>{{ r.start_time|time:"H:i"|default:"" }}</td>
+  <td>{{ r.end_time|time:"H:i"|default:"" }}</td>
+  <td>{% if r.code %}<span class="label label-default">{{ r.code }}</span>{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="4"><em>No attendance records.</em></td></tr>
+{% endfor %}
+</table>

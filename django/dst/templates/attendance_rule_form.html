@@ -1,0 +1,70 @@
+<h3>{% if is_new %}New{% else %}Edit{% endif %} attendance rule</h3>
+<form method="POST" class="form-horizontal">
+  {% csrf_token %}
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Category</label>
+    <div class="col-sm-4">
+      <input type="text" name="category" class="form-control" value="{{ rule.category|default:'' }}">
+    </div>
+  </div>
+  {% if is_new %}
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Person</label>
+    <div class="col-sm-4">
+      <select name="person_id" class="form-control">
+        <option value="">Everyone</option>
+      </select>
+    </div>
+  </div>
+  {% endif %}
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Start date</label>
+    <div class="col-sm-3">
+      <input type="date" name="start_date" class="form-control" value="{{ rule.start_date|date:'Y-m-d'|default:'' }}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">End date</label>
+    <div class="col-sm-3">
+      <input type="date" name="end_date" class="form-control" value="{{ rule.end_date|date:'Y-m-d'|default:'' }}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Days</label>
+    <div class="col-sm-6">
+      <label class="checkbox-inline"><input type="checkbox" name="monday" {% if rule.monday %}checked{% endif %}> M</label>
+      <label class="checkbox-inline"><input type="checkbox" name="tuesday" {% if rule.tuesday %}checked{% endif %}> T</label>
+      <label class="checkbox-inline"><input type="checkbox" name="wednesday" {% if rule.wednesday %}checked{% endif %}> W</label>
+      <label class="checkbox-inline"><input type="checkbox" name="thursday" {% if rule.thursday %}checked{% endif %}> Th</label>
+      <label class="checkbox-inline"><input type="checkbox" name="friday" {% if rule.friday %}checked{% endif %}> F</label>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Absence code</label>
+    <div class="col-sm-3">
+      <select name="absence_code" class="form-control">
+        <option value="">--</option>
+        {% for c in codes %}
+        <option value="{{ c.code }}" {% if rule.absence_code == c.code %}selected{% endif %}>{{ c.code }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Min hours</label>
+    <div class="col-sm-2">
+      <input type="number" step="0.5" name="min_hours" class="form-control" value="{{ rule.min_hours|default:'' }}">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-3">
+      <label class="checkbox-inline"><input type="checkbox" name="exempt_from_fees" {% if rule.exempt_from_fees %}checked{% endif %}> Exempt from fees</label>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-3">
+      <input type="submit" class="btn btn-primary" value="{% if is_new %}Create{% else %}Save{% endif %}">
+      <a href="/attendance/rules" class="btn btn-default">Cancel</a>
+    </div>
+  </div>
+</form>

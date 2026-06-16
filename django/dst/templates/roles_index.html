@@ -1,0 +1,35 @@
+<h3>Roles</h3>
+{% if can_edit %}
+<p><a href="/roles/newRole" class="btn btn-primary">New Role</a></p>
+{% endif %}
+
+{% for type_id, type_label in type_labels.items %}
+<h4>{{ type_label }}s</h4>
+<table class="table roles-index-table">
+<tr><th>Role
+  {% if can_edit %}<th>Eligibility</th><th>Notes</th><th>Active</th><th></th>{% endif %}
+</tr>
+{% for r in roles %}
+{% if r.type == type_id %}
+<tr>
+  <td><strong>{{ r.name }}</strong></td>
+  {% if can_edit %}
+  <td class="roles-verbose">{% if r.eligibility == 0 %}Anyone{% elif r.eligibility == 1 %}Staff Only{% elif r.eligibility == 2 %}Student Only{% endif %}</td>
+  <td class="roles-verbose">{{ r.notes }}</td>
+  <td>{% if r.is_active %}Yes{% else %}No{% endif %}</td>
+  <td>
+    <form method="POST" style="display:inline">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_active">
+      <input type="hidden" name="role_id" value="{{ r.id }}">
+      <button type="submit" class="btn btn-xs {% if r.is_active %}btn-danger{% else %}btn-success{% endif %}">
+        {% if r.is_active %}Deactivate{% else %}Activate{% endif %}
+      </button>
+    </form>
+  </td>
+  {% endif %}
+</tr>
+{% endif %}
+{% endfor %}
+</table>
+{% endfor %}

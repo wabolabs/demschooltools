@@ -1,0 +1,21 @@
+<h3>Week of {{ monday|date:"F j, Y" }}</h3>
+<form method="GET" class="form-inline">
+  <input type="date" name="date" class="form-control" value="{{ monday|date:'Y-m-d' }}">
+  <input type="submit" class="btn btn-primary" value="Go">
+</form>
+<table class="table table-condensed attendance-view">
+<tr><th>Name</th>{% for d in days %}<th>{{ d|date:"D M j" }}</th>{% endfor %}</tr>
+{% for row in week_data %}
+<tr>
+  <td>{{ row.person.display_name|default:row.person.first_name }}</td>
+  {% for ad in row.days %}
+    <td class="{% if not ad %}empty{% endif %}" style="text-align:center">
+      {% if ad %}
+        {{ ad.start_time|time:"H:i"|default:"" }}-{{ ad.end_time|time:"H:i"|default:"" }}
+        {% if ad.code %}<br><span class="label label-default">{{ ad.code }}</span>{% endif %}
+      {% endif %}
+    </td>
+  {% endfor %}
+</tr>
+{% endfor %}
+</table>

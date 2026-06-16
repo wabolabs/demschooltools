@@ -1,0 +1,30 @@
+<h2>New Role</h2>
+<form method="POST" class="form-horizontal">
+  {% csrf_token %}
+  <table class="roles-edit-table">
+    <tr><td><label class="control-label">Name</label></td><td><input type="text" name="name" required class="form-control"></td></tr>
+    <tr><td><label class="control-label">Type</label></td>
+      <td>
+        <select name="type" class="form-control">
+          <option value="0">Individual</option>
+          <option value="1">Committee</option>
+          <option value="2">Group</option>
+        </select>
+      </td>
+    </tr>
+    <tr><td><label class="control-label">Eligibility</label></td>
+      <td>
+        <select name="eligibility" class="form-control">
+          <option value="0">Anyone</option>
+          <option value="1">Staff Only</option>
+          <option value="2">Student Only</option>
+        </select>
+      </td>
+    </tr>
+    <tr><td><label class="control-label">Notes</label></td><td><textarea name="notes" rows="2" class="form-control"></textarea></td></tr>
+    <tr><td><label class="control-label">Description</label></td><td><textarea name="description" rows="3" class="form-control"></textarea></td></tr>
+  </table>
+  <br>
+  <input type="submit" value="Create" class="btn btn-primary">
+  <a href="/roles/index" class="btn btn-default">Cancel</a>
+</form>

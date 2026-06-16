@@ -40,7 +40,23 @@ from custodia.views import (
     StudentsTodayView,
     SwipeView,
 )
-from dst.attendance_views import AttendanceCodesView, AttendanceRulesView, SignInSheetView
+from dst.attendance_views import (
+    AttendanceCodesView,
+    AttendanceDeleteRuleView,
+    AttendanceDownloadView,
+    AttendanceNewRuleView,
+    AttendanceOffCampusView,
+    AttendancePersonReportView,
+    AttendancePinsView,
+    AttendanceReportsView,
+    AttendanceRuleEditView,
+    AttendanceRulesView,
+    AttendanceSaveDayView,
+    AttendanceSaveWeekView,
+    AttendanceWeekView,
+    SignInSheetView,
+    json_people,
+)
 from dst.health_views import health
 from dst.manual_views import (
     CreateUpdateChapter,
@@ -87,6 +103,11 @@ from dst.people_views import (
     people_index,
     person_detail,
     all_tags,
+)
+from dst.roles_views import (
+    roles_index,
+    roles_new,
+    roles_records,
 )
 from dst.settings_views import (
     settings_access,
@@ -185,6 +206,22 @@ urlpatterns = [
     path("logout", LogoutView.as_view()),
     path("attendance", lambda r: redirect("/attendance/signInSheet")),
     path("attendance/", lambda r: redirect("/attendance/signInSheet")),
+    path("attendance/jsonPeople", json_people),
+    path("attendance/viewWeek", AttendanceWeekView.as_view()),
+    path("attendance/editWeek", AttendanceWeekView.as_view()),
+    path("attendance/reports", AttendanceReportsView.as_view()),
+    path("attendance/pins", AttendancePinsView.as_view()),
+    path("attendance/offCampusTime", AttendanceOffCampusView.as_view()),
+    path("attendance/download", AttendanceDownloadView.as_view()),
+    path("attendance/forPerson/<int:person_id>", AttendancePersonReportView.as_view()),
+    path("attendance/newRule", AttendanceNewRuleView.as_view()),
+    path("attendance/rule/<int:rule_id>", AttendanceRuleEditView.as_view()),
+    path("attendance/saveRule", lambda r: redirect("/attendance/rules")),
+    path("attendance/deleteRule/<int:rule_id>", AttendanceDeleteRuleView.as_view()),
+    path("attendance/saveDay", AttendanceSaveDayView.as_view()),
+    path("attendance/saveWeek", AttendanceSaveWeekView.as_view()),
+    path("attendance/codes", AttendanceCodesView.as_view()),
+    path("attendance/rules", AttendanceRulesView.as_view()),
     path("people", people_index),
     path("people/", people_index),
     path("allPeople", all_people),
@@ -197,9 +234,9 @@ urlpatterns = [
     path("settings/access", settings_access),
     path("settings/checklists", settings_view),
     path("viewAllTags", all_tags),
-    path("roles/index", settings_view),
-    path("attendance/codes", AttendanceCodesView.as_view()),
-    path("attendance/rules", AttendanceRulesView.as_view()),
+    path("roles/index", roles_index),
+    path("roles/newRole", roles_new),
+    path("roles/records", roles_records),
 ]
 
 if settings.SILK_ENABLED:
