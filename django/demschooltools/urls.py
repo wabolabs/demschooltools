@@ -54,6 +54,8 @@ from dst.people_views import (
     edit_person,
     people_index,
     person_detail,
+    settings_view,
+    all_tags,
 )
 
 
@@ -116,12 +118,20 @@ urlpatterns = [
     path("custodia/login", LoginView.as_view()),
     path("custodia/logout", LogoutView.as_view()),
     path("health/", health),
+    path("logout", LogoutView.as_view()),
+    path("attendance", SignInSheetView.as_view()),
     path("people", people_index),
     path("people/", people_index),
     path("allPeople", all_people),
     path("people/new", add_person),
     path("people/<int:person_id>", person_detail),
     path("people/edit/<int:person_id>", edit_person),
+    path("settings", settings_view),
+    path("settings/", settings_view),
+    path("settings/password", settings_view),
+    path("viewAllTags", all_tags),
+    path("roles/index", settings_view),
+    path("attendance/codes", settings_view),
 ]
 
 if settings.SILK_ENABLED:

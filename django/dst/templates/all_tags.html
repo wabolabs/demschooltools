@@ -1,0 +1,8 @@
+<h3>All Tags</h3>
+<ul>
+{% for tag in tags %}
+  <li><a href="/viewTag/{{ tag.id }}">{{ tag.title }}</a></li>
+{% empty %}
+  <li><em>No tags defined.</em></li>
+{% endfor %}
+</ul>

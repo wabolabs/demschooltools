@@ -289,3 +289,28 @@ def edit_person(request: DstHttpRequest, person_id: int):
         ),
         f"Edit {person.get_name()}",
     )
+
+
+@login_required()
+def settings_view(request: DstHttpRequest):
+    from django.template.loader import render_to_string
+    return render_main_template(
+        request,
+        "settings",
+        render_to_string("settings.html", request=request),
+        "Settings",
+    )
+
+
+@login_required()
+def all_tags(request: DstHttpRequest):
+    from django.template.loader import render_to_string
+    from dst.models import Tag
+    tags = Tag.objects.filter(organization=request.org).order_by("title")
+    return render_main_template(
+        request,
+        "crm",
+        render_to_string("all_tags.html", {"tags": tags}, request=request),
+        "All Tags",
+        selected_button="all_tags",
+    )
