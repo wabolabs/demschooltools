@@ -1,0 +1,15 @@
+<h3>Weekly minutes: {{ start_date }} to {{ end_date }}</h3>
+{% for m in meetings %}
+  <h4>{{ org_config.str_jc_name_short }} minutes from {{ m.date }}</h4>
+  <p><b>Chair:</b> {% for pam in m.personatmeeting_set.all %}{% if pam.role == 0 %}{{ pam.person.display_name|default:pam.person.first_name }}{% endif %}{% endfor %}
+  &middot; <b>Notetaker:</b> {% for pam in m.personatmeeting_set.all %}{% if pam.role == 2 %}{{ pam.person.display_name|default:pam.person.first_name }}{% endif %}{% endfor %}</p>
+  <table class="table">
+  {% for c in m.case_set.all %}
+    <tr><td><strong>#{{ c.case_number }}</strong>{% if c.location %} &middot; {{ c.location }}{% endif %}</td></tr>
+    <tr><td>{{ c.findings|linebreaks }}</td></tr>
+  {% endfor %}
+  </table>
+  {% if not forloop.last %}<hr>{% endif %}
+{% empty %}
+  <p><em>No meetings this week.</em></p>
+{% endfor %}

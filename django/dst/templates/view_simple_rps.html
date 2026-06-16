@@ -1,0 +1,14 @@
+<h3>{{ org_config.str_res_plans_cap }} — Simple view</h3>
+<table class="table">
+<tr><th>Person</th><th>Date</th><th>Case</th><th>{{ org_config.str_res_plan_cap }}</th></tr>
+{% for c in charges %}
+<tr>
+  <td>{% if c.person %}<a href="/viewPersonHistory/{{ c.person.id }}">{{ c.person.display_name|default:c.person.first_name }}{% endif %}</a></td>
+  <td>{{ c.case.meeting.date|date:"Y-m-d" }}</td>
+  <td>#{{ c.case.case_number }}</td>
+  <td>{{ c.resolution_plan }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="4"><em>No {{ org_config.str_res_plans }}.</em></td></tr>
+{% endfor %}
+</table>

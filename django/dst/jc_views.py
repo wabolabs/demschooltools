@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required as django_login_required
 from django.db.models import Count, Prefetch, Q
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -957,4 +957,142 @@ def edit_school_meeting_decision(request: DstHttpRequest, charge_id: int):
             request=request,
         ),
         "Edit School Meeting decision",
+    )
+
+
+@login_required()
+def set_rp_complete(request: DstHttpRequest):
+    charge_id = request.POST.get("id")
+    complete = request.POST.get("complete") == "true"
+    charge = Charge.objects.filter(id=charge_id, case__meeting__organization=request.org).first()
+    if charge:
+        charge.rp_complete = complete
+        charge.rp_complete_date = timezone.now() if complete else None
+        charge.save()
+        return JsonResponse({"ok": True})
+    return JsonResponse({"error": "not found"}, status=404)
+
+
+@login_required()
+def get_last_rp(request: DstHttpRequest, person_id: int, rule_id: int):
+    charge = Charge.objects.filter(
+        person_id=person_id, rule_id=rule_id, case__meeting__organization=request.org,
+    ).select_related("case__meeting").order_by("-case__meeting__date").first()
+    if charge:
+        return HttpResponse(f"<b>Last {get_org_config(request.org).str_res_plan}:</b> {charge.resolution_plan} ({charge.case.meeting.date})")
+    return HttpResponse("")
+
+
+@login_required()
+def get_case_references_json(request: DstHttpRequest, case_id: int):
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    if not case:
+        return JsonResponse([], safe=False)
+    refs = CaseReference.objects.filter(referencing_case=case).select_related("referenced_case")
+    data = []
+    for ref in refs:
+        c = ref.referenced_case
+        charges = Charge.objects.filter(case=c).select_related("person", "rule")
+        charge_data = []
+        for ch in charges:
+            charge_data.append({
+                "charge_id": ch.id,
+                "person": ch.person.get_name() if ch.person else "",
+                "rule": ch.rule.number() if ch.rule else "",
+                "resolutionPlan": ch.resolution_plan,
+                "isReferenced": ChargeReference.objects.filter(referenced_charge=ch, referencing_case=case).exists(),
+            })
+        data.append({
+            "caseNumber": c.case_number,
+            "findings": c.findings[:100] if c.findings else "",
+            "charges": charge_data,
+        })
+    return JsonResponse(data, safe=False)
+
+
+@login_required()
+def add_case_reference(request: DstHttpRequest, case_id: int):
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    referenced_id = request.POST.get("referenced_case_id")
+    ref_case = Case.objects.filter(id=referenced_id, meeting__organization=request.org).first()
+    if case and ref_case and ref_case != case:
+        CaseReference.objects.get_or_create(referencing_case=case, referenced_case=ref_case)
+    return JsonResponse({"ok": True})
+
+
+@login_required()
+def remove_case_reference(request: DstHttpRequest, case_id: int):
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    referenced_id = request.POST.get("referenced_case_id")
+    if case and referenced_id:
+        CaseReference.objects.filter(referencing_case=case, referenced_case_id=referenced_id).delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required()
+def add_charge_reference(request: DstHttpRequest, case_id: int):
+    charge_id = request.POST.get("charge_id")
+    charge = Charge.objects.filter(id=charge_id, case__meeting__organization=request.org).first()
+    case = Case.objects.filter(id=case_id, meeting__organization=request.org).first()
+    if charge and case:
+        ChargeReference.objects.get_or_create(referenced_charge=charge, referencing_case=case)
+    return JsonResponse({"ok": True})
+
+
+@login_required()
+def remove_charge_reference(request: DstHttpRequest, case_id: int):
+    charge_id = request.POST.get("charge_id")
+    if charge_id:
+        ChargeReference.objects.filter(referencing_case_id=case_id, referenced_charge_id=charge_id).delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required()
+def view_weekly_report(request: DstHttpRequest):
+    date_str = request.GET.get("date", "")
+    if date_str:
+        try:
+            d = date.fromisoformat(date_str)
+        except ValueError:
+            d = timezone.localdate()
+    else:
+        d = timezone.localdate()
+    start = d - timedelta(days=d.weekday())
+    end = start + timedelta(days=6)
+    return this_week_report(request)
+
+
+@login_required()
+def print_weekly_minutes(request: DstHttpRequest, start_date: str):
+    try:
+        d = date.fromisoformat(start_date)
+    except ValueError:
+        d = timezone.localdate()
+    start = d - timedelta(days=d.weekday())
+    end = start + timedelta(days=6)
+    meetings = Meeting.objects.filter(organization=request.org, date__gte=start, date__lte=end).order_by("date")
+    return render_main_template(
+        request,
+        "jc",
+        render_to_string("multi_meetings.html", {
+            "meetings": meetings, "start_date": start, "end_date": end,
+            "org_config": get_org_config(request.org),
+        }, request=request),
+        f"Weekly minutes {start} – {end}",
+    )
+
+
+@login_required()
+def view_simple_rps(request: DstHttpRequest):
+    charges = Charge.objects.filter(
+        case__meeting__organization=request.org,
+    ).exclude(resolution_plan="").select_related("case__meeting", "person", "rule").order_by("person__display_name", "-case__meeting__date")
+    return render_main_template(
+        request,
+        "jc",
+        render_to_string("view_simple_rps.html", {
+            "charges": charges,
+            "org_config": get_org_config(request.org),
+        }, request=request),
+        f"{get_org_config(request.org).str_res_plans_cap} — Simple view",
     )
