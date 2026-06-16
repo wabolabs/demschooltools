@@ -1,0 +1,11 @@
+<h3>Tag: {{ tag.title }}</h3>
+<p><a href="/editTag/{{ tag.id }}" class="btn btn-default btn-xs">Edit</a></p>
+<p>Flags: {% if tag.show_in_jc %}JC {% endif %}{% if tag.show_in_attendance %}Attendance {% endif %}</p>
+<h4>Members ({{ members|length }})</h4>
+<ul>
+{% for p in members %}
+  <li><a href="/people/{{ p.id }}">{{ p.display_name|default:p.first_name }}</a></li>
+{% empty %}
+  <li><em>No members.</em></li>
+{% endfor %}
+</ul>

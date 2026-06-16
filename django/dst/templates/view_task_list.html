@@ -1,0 +1,8 @@
+<h3>{{ task_list.title }}</h3>
+<ul>
+{% for task in tasks %}
+  <li>{{ task.title }}{% if not task.enabled %} <span class="text-muted">(disabled)</span>{% endif %}</li>
+{% empty %}
+  <li><em>No tasks.</em></li>
+{% endfor %}
+</ul>

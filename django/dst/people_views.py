@@ -1,10 +1,13 @@
 from django.contrib.auth.decorators import login_required as django_login_required
+from django.db.models import Q
 from django.db.transaction import atomic
+from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 
-from dst.models import Comment, Organization, Person, PhoneNumber, User, UserRole
+from dst.models import Comment, Organization, Person, PersonTagChange, PhoneNumber, Tag, Task, TaskList, User, UserRole
 from dst.org_config import get_org_config
 from dst.utils import DstHttpRequest, render_main_template
 
@@ -314,3 +317,113 @@ def all_tags(request: DstHttpRequest):
         "All Tags",
         selected_button="all_tags",
     )
+
+
+@login_required()
+def json_people(request: DstHttpRequest):
+    term = request.GET.get("term", "")
+    people = Person.objects.filter(organization=request.org)
+    if term:
+        people = people.filter(
+            Q(first_name__icontains=term) | Q(last_name__icontains=term) | Q(display_name__icontains=term) | Q(email__icontains=term)
+        )
+    results = [{"id": p.id, "label": p.get_name() + " " + p.last_name, "value": p.get_name()} for p in people.order_by("display_name", "first_name")[:20]]
+    return JsonResponse(results, safe=False)
+
+
+@login_required()
+def json_tags(request: DstHttpRequest, person_id: int):
+    person = Person.objects.filter(organization=request.org, id=person_id).first()
+    if not person:
+        return JsonResponse([], safe=False)
+    tags = person.tags.values("id", "title")
+    return JsonResponse(list(tags), safe=False)
+
+
+@login_required()
+def add_tag(request: DstHttpRequest, person_id: int):
+    person = Person.objects.filter(organization=request.org, id=person_id).first()
+    if not person:
+        return JsonResponse({"error": "not found"}, status=404)
+    title = request.POST.get("title", "")
+    tag_id = request.POST.get("tagId", "")
+    if tag_id:
+        tag = Tag.objects.filter(id=tag_id, organization=request.org).first()
+    elif title:
+        tag, _ = Tag.objects.get_or_create(title=title, organization=request.org)
+    else:
+        return JsonResponse({"error": "no tag"}, status=400)
+    if tag:
+        person.tags.add(tag)
+        TagChange.objects.create(person=person, tag=tag, creator=request.user, was_add=True)
+    return JsonResponse({"id": tag.id, "title": tag.title})
+
+
+@login_required()
+def remove_tag(request: DstHttpRequest, person_id: int, tag_id: int):
+    person = Person.objects.filter(organization=request.org, id=person_id).first()
+    tag = Tag.objects.filter(id=tag_id, organization=request.org).first()
+    if person and tag:
+        person.tags.remove(tag)
+        TagChange.objects.create(person=person, tag=tag, creator=request.user, was_add=False)
+    return JsonResponse({"ok": True})
+
+
+@login_required()
+def view_tag(request: DstHttpRequest, tag_id: int):
+    tag = Tag.objects.filter(organization=request.org, id=tag_id).first()
+    if not tag:
+        return HttpResponseNotFound()
+    members = Person.objects.filter(organization=request.org, tags=tag).order_by("display_name", "first_name")
+    return render_main_template(
+        request, "crm",
+        render_to_string("view_tag.html", {"tag": tag, "members": members, "org_config": get_org_config(request.org)}, request=request),
+        f"Tag: {tag.title}",
+    )
+
+
+@login_required()
+def edit_tag(request: DstHttpRequest, tag_id: int):
+    tag = Tag.objects.filter(organization=request.org, id=tag_id).first()
+    if not tag:
+        return HttpResponseNotFound()
+    if request.method == "POST":
+        tag.title = request.POST.get("title", tag.title)
+        tag.show_in_jc = request.POST.get("show_in_jc") == "on"
+        tag.show_in_attendance = request.POST.get("show_in_attendance") == "on"
+        tag.save()
+        return redirect(f"/viewTag/{tag.id}")
+    return render_main_template(
+        request, "crm",
+        render_to_string("edit_tag.html", {"tag": tag, "org_config": get_org_config(request.org)}, request=request),
+        f"Edit tag: {tag.title}",
+    )
+
+
+@login_required()
+def view_task_list(request: DstHttpRequest, task_list_id: int):
+    tl = TaskList.objects.filter(organization=request.org, id=task_list_id).first()
+    if not tl:
+        return HttpResponseNotFound()
+    tasks = Task.objects.filter(task_list=tl).order_by("sort_order")
+    return render_main_template(
+        request, "crm",
+        render_to_string("view_task_list.html", {"task_list": tl, "tasks": tasks, "org_config": get_org_config(request.org)}, request=request),
+        f"Task list: {tl.title}",
+    )
+
+
+@login_required()
+def add_comment(request: DstHttpRequest):
+    person_id = request.POST.get("person", "")
+    message = request.POST.get("message", "")
+    if person_id and message:
+        try:
+            person = Person.objects.get(id=person_id, organization=request.org)
+            Comment.objects.create(person=person, user=request.user, message=message)
+        except Person.DoesNotExist:
+            pass
+    ref = request.POST.get("ref", "")
+    if ref:
+        return redirect(ref)
+    return redirect("/people")

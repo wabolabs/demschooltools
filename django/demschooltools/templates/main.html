@@ -113,42 +113,8 @@
                                 <a {% if selectedBtn == "all_people" %}class="active"{% endif %}
                                    href="/allPeople">
                                     All people</a>
-                                <span class="dropdown">
-                                    <ul class="dropdown-menu">
-                                        {% for kv in tags_with_prefixes %}
-                                            {% if kv.1|length > 1 %}
-                                                <li class="dropdown-submenu">
-                                                    <a tabindex="-1" href="#">{{ kv.0 }}</a>
-                                                    <ul class="dropdown-menu">
-                                                        {% for t in kv.1 %}
-                                                            <li><a href="/viewTag/{{ t.getId }}">{{ t.getTitle }}</a></li>
-                                                        {% endfor %}
-                                                    </ul></li>
-                                            {% else %}
-                                                {% for t in kv.1 %}
-                                                    <li><a href="/viewTag/{{ t.getId }}">{{ t.getTitle }}</a></li>
-                                                {% endfor %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        <li role="separator" class="divider"></li>
-                                        <li><a href="/viewAllTags">All Tags</a></li>
-                                    </ul>
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        Tags
-                                        <b class="caret"></b>
-                                    </a>
-                                </span>
-                                <span class="dropdown">
-                                    <ul class="dropdown-menu">
-                                        {% for l in task_lists %}
-                                            <li><a href="/viewTaskList/{{ l.getId }}">{{ l.getTitle }}</a></li>
-                                        {% endfor %}
-                                    </ul>
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        Checklists
-                                        <b class="caret"></b>
-                                    </a>
-                                </span>
+                                <a href="/viewAllTags">Tags</a>
+                                <a href="#" style="display:none">Checklists</a>
                                 <input id="navbar_people_search" type="search" placeholder="Search people..."/>
                                 <a href="/people/new">Add a person</a>
                             </div>

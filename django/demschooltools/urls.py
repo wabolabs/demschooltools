@@ -14,14 +14,63 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+import logging
+
 from django.conf import settings
 from django.contrib import admin
-from django.shortcuts import redirect
+from django.core.mail import send_mail
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import include, path, register_converter
+
+from dst.models import Person, Tag
+from dst.org_config import get_org_config
+from dst.utils import DstHttpRequest, render_main_template
+
+LOGGER = logging.getLogger(__name__)
 
 
 def login_view(request):
     return redirect("/custodia/login")
+
+
+def feedback_email(request):
+    if request.method == "POST":
+        name = request.POST.get("name", "")
+        email = request.POST.get("email", "")
+        message = request.POST.get("message", "")
+        try:
+            send_mail(
+                f"DemSchoolTools feedback from {name}",
+                f"From: {name} <{email}>\n\n{message}",
+                email or "noreply@demschooltools.com",
+                ["schmave@gmail.com"],
+                fail_silently=True,
+            )
+        except Exception as e:
+            LOGGER.error("Failed to send feedback email: %s", e)
+    return redirect("/")
+
+
+def misc_view_files(request: DstHttpRequest):
+    return render_main_template(
+        request,
+        "misc",
+        render_to_string("misc_files.html", {"org_config": get_org_config(request.org)}, request=request),
+        "Shared Files",
+        selected_button="view_files",
+    )
+
+
+def misc_file_sharing(request: DstHttpRequest):
+    return render_main_template(
+        request,
+        "misc",
+        render_to_string("misc_files.html", {"org_config": get_org_config(request.org)}, request=request),
+        "File Sharing",
+        selected_button="file_sharing",
+    )
 
 
 from custodia.views import (
@@ -97,12 +146,20 @@ from dst.jc_views import (
     view_todays_minutes,
 )
 from dst.people_views import (
+    add_comment,
     add_person,
+    add_tag,
     all_people,
+    all_tags,
     edit_person,
+    edit_tag,
+    json_people,
+    json_tags,
     people_index,
     person_detail,
-    all_tags,
+    remove_tag,
+    view_tag,
+    view_task_list,
 )
 from dst.roles_views import (
     roles_index,
@@ -234,6 +291,22 @@ urlpatterns = [
     path("settings/access", settings_access),
     path("settings/checklists", settings_view),
     path("viewAllTags", all_tags),
+    path("jsonPeople", json_people),
+    path("jsonTags/<int:person_id>", json_tags),
+    path("addTag/<int:person_id>", add_tag),
+    path("removeTag/<int:person_id>/<int:tag_id>", remove_tag),
+    path("viewTag/<int:tag_id>", view_tag),
+    path("editTag/<int:tag_id>", edit_tag),
+    path("saveTag", lambda r: redirect("/viewAllTags")),
+    path("viewTaskList/<int:task_list_id>", view_task_list),
+    path("addComment", add_comment),
+    path("sendFeedbackEmail", feedback_email),
+    path("misc/viewFiles", misc_view_files),
+    path("misc/fileSharing", misc_file_sharing),
+    path("misc/saveFileSharingSettings", lambda r: redirect("/misc/fileSharing")),
+    path("misc/uploadFileShare", lambda r: redirect("/misc/viewFiles")),
+    path("misc/emailFile", lambda r: redirect("/misc/viewFiles")),
+    path("misc/deleteFile", lambda r: redirect("/misc/viewFiles")),
     path("roles/index", roles_index),
     path("roles/newRole", roles_new),
     path("roles/records", roles_records),
