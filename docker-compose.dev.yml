@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: school_crm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  django:
+    build:
+      context: .
+      dockerfile: django/Dockerfile.dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: demschooltools.settings_ci
+      DJANGO_SECRET_KEY: dev-secret-key-not-for-production
+      APPLICATION_SECRET: dev-app-secret-not-for-production
+      DST_DB_NAME: school_crm
+      DST_DB_USER: postgres
+      DST_DB_PASSWORD: devpassword
+      DST_DB_HOST: postgres
+      DJANGO_DEBUG: "true"
+    ports:
+      - "8001:8000"
+
+volumes:
+  postgres_data_dev:
